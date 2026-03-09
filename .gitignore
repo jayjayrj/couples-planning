@@ -1,0 +1,25 @@
+# Java
+target/
+build/
+out/
+
+# Logs
+*.log
+
+# Windows
+Thumbs.db
+
+# Env
+.env
+.env.*
+
+# Node
+node_modules/
+.next/
+dist/
+
+# Coverage
+coverage/
+
+# Docker
+*.pid
