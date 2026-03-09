@@ -10,16 +10,38 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const data = [
-  { month: "Abr", balance: 5500 },
-  { month: "Mai", balance: 7000 },
-  { month: "Jun", balance: 8200 },
-  { month: "Jul", balance: 9100 },
-  { month: "Ago", balance: 10200 },
-  { month: "Set", balance: 11800 },
-];
+type ProjectionItem = {
+  month: string;
+  balance: number;
+};
 
-export default function ProjectionChart() {
+type Props = {
+  data: ProjectionItem[];
+};
+
+function formatMonthLabel(value: string) {
+  const [year, month] = value.split("-");
+  const date = new Date(Number(year), Number(month) - 1, 1);
+
+  return date.toLocaleDateString("pt-BR", {
+    month: "short",
+  });
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+export default function ProjectionChart({ data }: Props) {
+  const chartData = data.map((item) => ({
+    ...item,
+    monthLabel: formatMonthLabel(item.month),
+  }));
+
   return (
     <div
       style={{
@@ -41,11 +63,11 @@ export default function ProjectionChart() {
 
       <div style={{ width: "100%", height: "320px" }}>
         <ResponsiveContainer>
-          <LineChart data={data}>
+          <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="month" stroke="#6b7280" />
-            <YAxis stroke="#6b7280" />
-            <Tooltip />
+            <XAxis dataKey="monthLabel" stroke="#6b7280" />
+            <YAxis stroke="#6b7280" tickFormatter={formatCurrency} />
+            <Tooltip formatter={(value: number) => formatCurrency(value)} />
             <Line
               type="monotone"
               dataKey="balance"
