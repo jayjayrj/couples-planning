@@ -2,6 +2,7 @@ package com.couplesplanning.auth;
 
 import com.couplesplanning.shared.exception.BusinessException;
 import com.couplesplanning.shared.exception.UnauthorizedException;
+import com.couplesplanning.shared.security.AuthenticatedUser;
 import com.couplesplanning.shared.security.JwtService;
 import com.couplesplanning.user.User;
 import com.couplesplanning.user.UserRepository;
@@ -62,6 +63,14 @@ public class AuthService {
                 user.getId(),
                 user.getEmail(),
                 user.getFullName()
+        );
+    }
+
+    public AuthMeResponse me(AuthenticatedUser authenticatedUser) {
+        return new AuthMeResponse(
+                authenticatedUser.getId(),
+                authenticatedUser.getEmail(),
+                authenticatedUser.getFullName()
         );
     }
 }

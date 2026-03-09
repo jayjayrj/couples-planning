@@ -1,8 +1,10 @@
 package com.couplesplanning.auth;
 
+import com.couplesplanning.shared.security.AuthenticatedUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,5 +23,10 @@ public class AuthController {
     @PostMapping("/login")
     public LoginResponse login(@RequestBody @Valid LoginRequest request) {
         return authService.login(request);
+    }
+
+    @GetMapping("/me")
+    public AuthMeResponse me(@AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        return authService.me(authenticatedUser);
     }
 }
