@@ -1,6 +1,7 @@
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
 import SummaryCard from "../components/SummaryCard"
+import ProjectionChart from "../components/ProjectionChart";
 
 export default function Home() {
   return (
@@ -45,6 +46,8 @@ export default function Home() {
               color="#6366f1"
             />
           </div>
+
+          <ProjectionChart />
         </main>
       </div>
     </div>
