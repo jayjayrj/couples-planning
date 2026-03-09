@@ -1,9 +1,21 @@
+import Sidebar from "@/components/Sidebar";
+import Topbar from "@/components/Topbar";
+
 export default function Home() {
   return (
-    <main style={{padding: "40px", fontFamily: "Arial"}}>
-      <h1>Couples Planning</h1>
-      <p>Sistema de planejamento financeiro para casais.</p>
-      <p>Frontend funcionando 🚀</p>
-    </main>
-  )
+    <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
+      <Sidebar />
+
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <Topbar />
+
+        <main style={{ padding: "32px" }}>
+          <h1 style={{ marginTop: 0, color: "#111827" }}>Dashboard</h1>
+          <p style={{ color: "#6b7280" }}>
+            Bem-vindo ao Couples Planning.
+          </p>
+        </main>
+      </div>
+    </div>
+  );
 }
