@@ -13,6 +13,11 @@ spring:
   flyway:
     enabled: true
 
+app:
+  jwt:
+    secret: minha-chave-super-secreta-com-pelo-menos-32-caracteres
+    expiration: 86400000
+
 logging:
   level:
     org.springframework.security: INFO
