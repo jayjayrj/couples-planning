@@ -2,6 +2,7 @@ package com.couplesplanning.income;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +15,7 @@ public class IncomeController {
     private final IncomeService incomeService;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public IncomeResponse create(@RequestBody @Valid CreateIncomeRequest request) {
         return incomeService.create(request);
     }

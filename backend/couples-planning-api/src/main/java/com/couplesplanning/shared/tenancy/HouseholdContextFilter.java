@@ -27,7 +27,17 @@ public class HouseholdContextFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
+        if (request.getRequestURI().startsWith("/auth")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String householdHeader = request.getHeader("X-Household-Id");
+
+        if (request.getRequestURI().startsWith("/auth")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (householdHeader != null) {
 
