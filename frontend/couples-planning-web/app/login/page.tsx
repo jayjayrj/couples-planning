@@ -44,7 +44,7 @@ export default function LoginPage() {
       // por enquanto vamos fixar household 1
       localStorage.setItem("householdId", "1");
 
-      router.push("/");
+      router.push("/dashboard");
 
     } catch (err) {
 

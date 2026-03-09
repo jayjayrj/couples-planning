@@ -1,4 +1,16 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+
 export default function Topbar() {
+  const router = useRouter();
+
+  function handleLogout() {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("householdId");
+    router.push("/login");
+  }
+
   return (
     <header
       style={{
@@ -24,9 +36,23 @@ export default function Topbar() {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "12px",
+          gap: "16px",
         }}
       >
+        <button
+          onClick={handleLogout}
+          style={{
+            padding: "10px 14px",
+            borderRadius: "8px",
+            border: "1px solid #e5e7eb",
+            background: "#ffffff",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          Sair
+        </button>
+
         <div
           style={{
             width: "40px",
