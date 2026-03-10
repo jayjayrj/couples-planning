@@ -11,6 +11,8 @@ import { formatCurrency } from "../../lib/currency";
 
 type Expense = {
   id: number;
+  accountId: number | null;
+  accountName: string | null;
   description: string;
   amount: number;
   recurrenceType: "ONCE" | "MONTHLY";
@@ -430,6 +432,7 @@ export default function DespesasPage() {
                   <thead>
                     <tr style={{ background: "#f8fafc", textAlign: "left" }}>
                       <th style={{ padding: "16px" }}>Descrição</th>
+                      <th style={{ padding: "16px" }}>Conta</th>
                       <th style={{ padding: "16px" }}>Valor</th>
                       <th style={{ padding: "16px" }}>Recorrência</th>
                       <th style={{ padding: "16px" }}>Data Inicial</th>
@@ -441,7 +444,7 @@ export default function DespesasPage() {
                   <tbody>
                     {filteredExpenses.length === 0 && (
                       <tr>
-                        <td colSpan={6} style={{ padding: "24px", textAlign: "center" }}>
+                        <td colSpan={7} style={{ padding: "24px", textAlign: "center" }}>
                           {filter === "ALL" && "Nenhuma despesa cadastrada."}
                           {filter === "PENDING" && "Nenhuma despesa pendente encontrada."}
                           {filter === "PAID" && "Nenhuma despesa paga encontrada."}
@@ -458,6 +461,7 @@ export default function DespesasPage() {
                       return (
                         <tr key={expense.id} style={{ borderTop: "1px solid #e5e7eb" }}>
                           <td style={{ padding: "16px" }}>{expense.description}</td>
+                          <td style={{ padding: "16px" }}>{expense.accountName ?? "-"}</td>
                           <td style={{ padding: "16px" }}>
                             {formatCurrency(expense.amount)}
                           </td>

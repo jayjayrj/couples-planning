@@ -1,500 +1,482 @@
-# Couples Planning — Project Context
+Couples Planning — Project Context
+Overview
 
-## Overview
+Couples Planning é uma aplicação web para planejamento financeiro doméstico (household financial planning).
 
-Couples Planning é um sistema SaaS para planejamento financeiro de casais.
-Ele permite gerenciar receitas, despesas, contas e projeções financeiras dentro de um household compartilhado.
+O sistema permite que dois parceiros organizem:
 
-O sistema possui backend em **Java + Spring Boot** e frontend em **Next.js + React + TypeScript**.
+contas financeiras
 
----
+receitas
 
-# Architecture
+despesas
 
-## Backend
+projeção financeira futura
 
-Stack:
+saldo consolidado do household
 
-* Java 21
-* Spring Boot
-* Spring Security
-* JWT Authentication
-* PostgreSQL
-* Maven
-* Docker
+O objetivo é fornecer visibilidade clara sobre a situação financeira atual e futura do casal.
 
-Arquitetura baseada em camadas:
-
-controller
-service
-repository
-entity
-dto
-security
-exception
-config
-
----
-
-## Frontend
+Architecture
+Backend
 
 Stack:
 
-* Next.js
-* React
-* TypeScript
-* App Router
-* CSS inline styling
+Java
 
-Estrutura:
+Spring Boot
 
-app
-components
-lib
+Spring Security
 
-Componentes principais:
+JWT Authentication
 
-Sidebar
-Topbar
-Modal
-AuthGuard
-ProjectionChart
-SummaryCard
+Spring Data JPA
 
----
+Flyway
 
-# Project Structure
+PostgreSQL
 
-couples-planning
-│
-├─ backend
-│  └─ couples-planning-api
-│
-├─ frontend
-│  └─ couples-planning-web
-│
-└─ docs
-├─ PROJECT_CONTEXT.md
-└─ NEXT_STEPS.md
+Arquitetura:
 
----
+Controller
+Service
+Repository
+Entity
+DTO / Request / Response
 
-# Backend Features Implemented
+O backend é multi-tenant por household.
 
-## Authentication
+Cada registro pertence a um household_id.
 
-Endpoints:
+Frontend
 
-POST /auth/register
-POST /auth/login
-GET /auth/me
+Stack:
+
+Next.js (App Router)
+
+React
+
+TypeScript
+
+CSS simples (inline styles)
+
+Estrutura principal:
+
+app/
+  dashboard/
+  despesas/
+  receitas/
+  contas/
+  projecao/
+
+components/
+  Sidebar
+  Topbar
+  Modal
+  Forms
+  Charts
+
+lib/
+  api.ts
+  currency.ts
+Core Domain
+Household
+
+Representa a unidade financeira do casal.
+
+Um usuário pode pertencer a um ou mais households (feature futura).
+
+Cada entidade financeira pertence a um household.
+
+User
+
+Usuário autenticado.
 
 Autenticação via:
 
-JWT Token
+JWT
 
-Fluxo:
+Endpoints principais:
 
-Login → JWT → Header Authorization → Backend valida
+POST /auth/register
+POST /auth/login
+GET  /auth/me
+Financial Domain
 
----
+O sistema utiliza um modelo baseado em contas financeiras + ledger de transações.
 
-## Household
+Isso garante consistência financeira e rastreabilidade.
 
-Funcionalidades:
+Account
 
-* criação de household
-* seleção de household ativo
-* associação de usuários
-
----
-
-## Accounts
-
-CRUD de contas financeiras.
+Representa uma conta financeira.
 
 Exemplos:
 
-Conta corrente
-Conta poupança
-Cartão
+Conta Corrente
 
-Campos expostos no retorno atual:
+Conta Poupança
 
-* id
-* name
-* type
-* currentBalance
+Dinheiro
 
----
-
-## Expenses
-
-Funcionalidades:
-
-* listar despesas
-* criar despesa
-* despesa recorrente
-* marcar como paga
-* excluir despesa
+Cartão de crédito (futuro)
 
 Campos principais:
 
+id
+household_id
+name
+type
+current_balance
+created_at
+
+Tipos possíveis:
+
+CHECKING
+SAVINGS
+CREDIT_CARD
+CASH
+Income
+
+Representa uma receita.
+
+Exemplo:
+
+salário
+
+freelance
+
+aluguel recebido
+
+Campos principais:
+
+id
+household_id
+account_id
 description
 amount
-recurrenceType
-startDate
-endDate
-dayOfMonth
-status
+recurrence_type
+start_date
+end_date
+day_of_month
+realized_at
+created_at
 
-Status:
+Recorrência:
+
+ONCE
+MONTHLY
+
+Regras:
+
+criar income gera crédito na conta
+
+cria também AccountTransaction
+
+Expense
+
+Representa uma despesa planejada ou paga.
+
+Campos principais:
+
+id
+household_id
+account_id
+description
+amount
+recurrence_type
+start_date
+end_date
+day_of_month
+status
+paid_at
+created_at
+
+Status possíveis:
 
 PENDING
 PAID
 
----
+Regras:
 
-## Incomes
+Criar despesa:
 
-Funcionalidades:
+status = PENDING
+não altera saldo
 
-* listar receitas
-* criar receita
-* receita recorrente
-* excluir receita
+Marcar como paga:
+
+status = PAID
+paid_at = now
+debita conta
+gera AccountTransaction
+Financial Ledger
+AccountTransaction
+
+Representa uma movimentação financeira real.
+
+Essa entidade garante:
+
+histórico financeiro
+
+rastreabilidade
+
+auditoria
+
+consistência de saldo
 
 Campos principais:
 
-description
+id
+household_id
+account_id
+type
+direction
 amount
-recurrenceType
-startDate
-endDate
-dayOfMonth
+transaction_date
+reference_type
+reference_id
+description
+created_at
+Transaction Type
 
----
+Define a origem da movimentação.
 
-## Projection
+INCOME
+EXPENSE
+TRANSFER_IN
+TRANSFER_OUT
+ADJUSTMENT
+REVERSAL
+Transaction Direction
 
-Backend já implementado para projeção financeira.
+Define impacto no saldo.
+
+CREDIT
+DEBIT
+Reference Type
+
+Define qual entidade originou a transação.
+
+INCOME
+EXPENSE
+MANUAL
+SYSTEM
+Account Ledger Service
+
+Serviço central responsável por movimentações financeiras.
+
+AccountLedgerService
+
+Funções principais:
+
+credit()
+debit()
+reverse()
+
+Responsabilidades:
+
+atualizar saldo da conta
+
+registrar transação no ledger
+
+validar duplicidade
+
+validar ownership do household
+
+Reversal Logic
+
+Ao excluir lançamentos financeiros, o sistema gera transações de estorno.
+
+Exemplo:
+
+Income criado:
+
+CREDIT 5000
+
+Income deletado:
+
+REVERSAL DEBIT 5000
+
+Isso mantém histórico contábil.
+
+Concurrency Protection
+
+Movimentações financeiras usam:
+
+PESSIMISTIC_WRITE
+
+na leitura da conta.
+
+Objetivo:
+
+evitar lost updates no saldo.
+
+Exemplo de problema evitado:
+
+Thread A lê saldo 1000
+Thread B lê saldo 1000
+
+A debita 100
+B debita 50
+
+Saldo correto:
+
+850
+
+Lock pessimista garante consistência.
+
+Database Migrations
+
+Gerenciadas via:
+
+Flyway
+
+Convenção:
+
+V1__init.sql
+V2__household.sql
+V3__accounts.sql
+...
+V8__account_ledger.sql
+
+Migration do ledger inclui:
+
+account_transactions
+account_id em expenses
+account_id em incomes
+paid_at
+realized_at
+Dashboard
 
 Endpoint:
 
-GET /projection?months=6
+GET /dashboard/summary
 
-Capacidades atuais:
+Retorna:
 
-* calcular saldo atual a partir das contas do household
-* projetar saldo mês a mês
-* considerar receitas recorrentes e únicas
-* considerar despesas pendentes recorrentes e únicas
-* limitar horizonte de projeção entre 1 e 60 meses
-* retornar lista de despesas recorrentes consideradas no forecast
+currentBalance
+totalMonthlyIncome
+totalMonthlyExpense
+projectedMonthEndBalance
+Projection
 
-Resposta atual:
+Endpoint:
 
-* currentBalance
-* projection[]
-* forecastExpenses[]
+GET /projection?months=N
 
-Campos de projection:
+Calcula projeção financeira futura considerando:
 
-month
-balance
+receitas recorrentes
 
-Campos de forecastExpenses:
+despesas recorrentes
 
-id
-description
-amount
-dayOfMonth
+saldo atual
 
----
+Retorna:
 
-# Frontend Features Implemented
-
-## Authentication
-
-* login page
-* armazenamento de JWT
-* `AuthGuard` para rotas protegidas
-
----
-
-## Layout
-
-Layout padrão do sistema:
-
-Sidebar
-Topbar
-Main Content
-
-Sidebar contém:
-
+monthly projections
+forecast expenses
+Frontend Pages
 Dashboard
+
+Mostra:
+
+saldo atual
+
+receitas do mês
+
+despesas do mês
+
+saldo projetado
+
+gráfico de evolução
+
 Contas
+
+Permite:
+
+criar conta
+
+listar contas
+
+excluir conta
+
 Despesas
+
+Permite:
+
+criar despesa
+
+marcar como paga
+
+excluir despesa
+
+filtros
+
+Modal inclui:
+
+account selection
 Receitas
+
+Permite:
+
+criar receita
+
+excluir receita
+
+filtros
+
+Modal inclui:
+
+account selection
 Projeção
 
----
+Mostra:
 
-## Dashboard
+gráfico de saldo futuro
 
-Exibe:
+previsão de despesas
 
-* saldo atual
-* receitas do mês
-* despesas do mês
-* saldo do mês
-* gráfico financeiro
+Horizontes:
 
-Consome:
+3 meses
+6 meses
+12 meses
+Current Development Focus
 
-* `/dashboard/summary`
-* `/projection?months=6`
+Fase atual do projeto:
 
----
+concluir integração financeira entre backend e frontend.
 
-## Accounts Page
+Próximos passos imediatos:
 
-Rota:
+finalizar seleção de conta no frontend
 
-`/contas`
+mostrar conta em receitas/despesas
 
-Funcionalidades:
+criar extrato por conta
 
-* listagem de contas
-* criação via modal
-* exclusão de conta
+melhorar UX
 
-UI:
+Long Term Vision
 
-* tabela estilizada
-* ações com ícones
-* modal de criação
-* integração com `/accounts`
+Evoluir Couples Planning para um SaaS financeiro para casais.
 
-Observação:
+Possíveis evoluções:
 
-A tabela usa `currentBalance` retornado pela API.
+categorias de despesas
 
----
+metas financeiras
 
-## Expenses Page
+relatórios
 
-Rota:
+exportação CSV
 
-`/despesas`
+convites para household
 
-Funcionalidades:
+multi usuário
 
-* listagem de despesas
-* criação via modal
-* marcar como paga
-* excluir despesa
-* filtros por status
+assinaturas premium
 
-Filtros:
-
-* Todas
-* Pendentes
-* Pagas
-
-UI:
-
-* tabela estilizada
-* badges de status
-* ações com ícones
-* tooltip nas ações
-
----
-
-## Incomes Page
-
-Rota:
-
-`/receitas`
-
-Funcionalidades:
-
-* listagem de receitas
-* criação via modal
-* exclusão de receita
-* filtros por recorrência
-
-Filtros:
-
-* Todas
-* Recorrentes
-* Únicas
-
-UI:
-
-* tabela estilizada
-* ações com ícones
-* modal de criação
-
----
-
-## Projection Page
-
-Rota:
-
-`/projecao`
-
-Funcionalidades:
-
-* exibir saldo atual
-* selecionar horizonte de projeção (3, 6, 12 meses)
-* exibir gráfico de evolução do saldo
-* exibir tabela com saldo projetado por mês
-* exibir despesas recorrentes consideradas no forecast
-
-Consome:
-
-`/projection?months=N`
-
----
-
-# UI Patterns
-
-## Toolbar Buttons
-
-Botões de ação com ícone:
-
-Nova
-↻ Recarregar
-
-Com tooltip.
-
----
-
-## Table Actions
-
-Ações nas tabelas:
-
-✓ marcar como paga
-🗑 excluir
-
-Estados:
-
-ativo → colorido
-desabilitado → cinza
-
-Hover:
-
-fundo circular
-leve animação
-
----
-
-## Filter Pills
-
-Padrão visual adotado para filtros de listagem:
-
-* botões arredondados
-* estado ativo em roxo
-* estado inativo em branco
-
-Usado em:
-
-* Despesas
-* Receitas
-* Projeção (horizonte de meses)
-
----
-
-# Development Environment
-
-Backend:
-
-mvn spring-boot:run
-
-Frontend:
-
-npm run dev
-
-Ou ambos:
-
-npm run dev:all
-
----
-
-# Database
-
-Banco:
-
-PostgreSQL
-
-Gerenciamento via:
-
-DBeaver
-
----
-
-# Tools
-
-Ferramentas utilizadas:
-
-IntelliJ
-Postman
-Docker Desktop
-DBeaver
-Git
-Node.js
-
----
-
-# Current UI Style
-
-Estilo visual inspirado em:
-
-Fintech dashboards
-Linear
-Stripe
-Notion
-
-Características:
-
-layout clean
-cards suaves
-ações com ícones
-tooltips
-cores sem exagero
-
----
-
-# Current Product Scope
-
-O produto já cobre um fluxo funcional de controle financeiro básico com visão de projeção futura.
-
-Fluxos já utilizáveis:
-
-* autenticação
-* seleção de household
-* cadastro de contas
-* cadastro e pagamento de despesas
-* cadastro de receitas
-* dashboard com resumo financeiro
-* projeção financeira futura
-
----
-
-# Deferred / Not Yet Implemented
-
-Itens planejados, mas ainda não implementados:
-
-* categorias de despesas
-* categorias de receitas
-* relatórios por categoria
-* metas financeiras
-* convites por email
-* multi-user household completo
-* audit log
-* exportação CSV
-
-Observação:
-
-Categorias foram deliberadamente adiadas para priorizar a evolução de projeção financeira e forecast.
+integrações bancárias (futuro distante)

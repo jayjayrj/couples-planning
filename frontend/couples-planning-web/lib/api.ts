@@ -1,4 +1,4 @@
-export const API_BASE_URL = "http://localhost:8080";
+export const API_BASE_URL = "http://192.168.0.109:8080";
 
 export async function apiFetch(path: string, options?: RequestInit) {
   const token = localStorage.getItem("accessToken");
@@ -28,25 +28,5 @@ export async function apiFetch(path: string, options?: RequestInit) {
 }
 
 export async function getAccounts() {
-  const token = localStorage.getItem("token");
-
-  const response = await fetch("http://localhost:8080/accounts", {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Erro ao buscar contas");
-  }
-
-  return response.json();
+  return apiFetch("/accounts");
 }
-
-export type Account = {
-  id: number;
-  name: string;
-  type: "CHECKING" | "SAVINGS" | "CREDIT_CARD" | "CASH";
-  currentBalance: number;
-};

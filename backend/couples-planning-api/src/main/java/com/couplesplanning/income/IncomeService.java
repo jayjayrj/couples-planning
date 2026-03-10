@@ -1,5 +1,7 @@
 package com.couplesplanning.income;
 
+import com.couplesplanning.account.Account;
+import com.couplesplanning.account.AccountRepository;
 import com.couplesplanning.ledger.AccountLedgerService;
 import com.couplesplanning.ledger.ReferenceType;
 import com.couplesplanning.shared.exception.ResourceNotFoundException;
@@ -17,6 +19,7 @@ public class IncomeService {
 
     private final IncomeRepository incomeRepository;
     private final AccountLedgerService accountLedgerService;
+    private final AccountRepository accountRepository;
 
     @Transactional
     public IncomeResponse create(CreateIncomeRequest request) {
@@ -87,9 +90,20 @@ public class IncomeService {
     }
 
     private IncomeResponse toResponse(Income income) {
+
+        String accountName = null;
+
+        if (income.getAccountId() != null) {
+            accountName = accountRepository
+                    .findByIdAndHouseholdId(income.getAccountId(), income.getHouseholdId())
+                    .map(Account::getName)
+                    .orElse(null);
+        }
+
         return new IncomeResponse(
                 income.getId(),
                 income.getAccountId(),
+                accountName,
                 income.getDescription(),
                 income.getAmount(),
                 income.getRecurrenceType(),

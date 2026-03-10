@@ -8,10 +8,12 @@ import java.time.LocalDate;
 public record IncomeResponse(
         Long id,
         Long accountId,
+        String accountName,
         String description,
         BigDecimal amount,
         RecurrenceType recurrenceType,
         LocalDate startDate,
         LocalDate endDate,
         Integer dayOfMonth
-) {}
+) {
+}

@@ -11,6 +11,8 @@ import { formatCurrency } from "../../lib/currency";
 
 type Income = {
   id: number;
+  accountId: number | null;
+  accountName: string | null;
   description: string;
   amount: number;
   recurrenceType: "ONCE" | "MONTHLY";
@@ -387,6 +389,7 @@ export default function ReceitasPage() {
                   <thead>
                     <tr style={{ background: "#f8fafc", textAlign: "left" }}>
                       <th style={{ padding: "16px" }}>Descrição</th>
+                      <th style={{ padding: "16px" }}>Conta</th>
                       <th style={{ padding: "16px" }}>Valor</th>
                       <th style={{ padding: "16px" }}>Recorrência</th>
                       <th style={{ padding: "16px" }}>Data Inicial</th>
@@ -397,7 +400,7 @@ export default function ReceitasPage() {
                   <tbody>
                     {filteredIncomes.length === 0 && (
                       <tr>
-                        <td colSpan={5} style={{ padding: "24px", textAlign: "center" }}>
+                        <td colSpan={6} style={{ padding: "24px", textAlign: "center" }}>
                           {filter === "ALL" && "Nenhuma receita cadastrada."}
                           {filter === "MONTHLY" && "Nenhuma receita recorrente encontrada."}
                           {filter === "ONCE" && "Nenhuma receita única encontrada."}
@@ -411,6 +414,7 @@ export default function ReceitasPage() {
                       return (
                         <tr key={income.id} style={{ borderTop: "1px solid #e5e7eb" }}>
                           <td style={{ padding: "16px" }}>{income.description}</td>
+                          <td style={{ padding: "16px" }}>{income.accountName ?? "-"}</td>
                           <td style={{ padding: "16px" }}>
                             {formatCurrency(income.amount)}
                           </td>

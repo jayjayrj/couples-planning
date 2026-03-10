@@ -69,7 +69,6 @@ FRONTEND
 * sidebar
 * topbar
 * páginas:
-
   * despesas
   * receitas
   * contas
@@ -80,391 +79,201 @@ FRONTEND
 
 ---
 
-# Phase 1 — Completar Funcionalidades Básicas
+# Important Domain Discovery
+
+Durante a evolução do projeto foi identificado um ponto estrutural importante:
+
+## Situação anterior
+
+O sistema possuía:
+
+* `Account.currentBalance`
+* `Expense`
+* `Income`
+
+Mas receitas e despesas não possuíam vínculo com conta.
+
+Consequências:
+
+* criar receita não creditava conta
+* criar despesa não debitava conta
+* marcar despesa como paga não debitava conta
+* saldo das contas ficava desacoplado dos lançamentos
+
+Isso fazia o produto funcionar mais como um **planner financeiro** do que como um **sistema financeiro consistente por conta**.
+
+---
+
+# Financial Domain Refactor
 
 Prioridade: ALTA
 
-Objetivo: tornar o sistema totalmente utilizável para controle financeiro básico.
+Objetivo: tornar o sistema financeiramente consistente e preparar a base para extrato, auditoria e evolução SaaS.
 
 ---
 
-## Accounts Page (Frontend)
+## Account-linked Incomes and Expenses (Backend)
 
-Status: ✅ CONCLUÍDO
+Status: ✅ IMPLEMENTADO NO BACKEND
 
 Entregue:
 
-* listar contas
-* criar conta
-* excluir conta
+* `Expense` com `accountId`
+* `Income` com `accountId`
+* `Expense` com `paidAt`
+* `Income` com `realizedAt`
+* requests atualizados para receber `accountId`
+* responses atualizados para retornar `accountId`
 
-Campos utilizados:
+Regras atuais:
 
-name
-type
-currentBalance
-
-UI:
-
-* tabela padrão igual despesas/receitas
-* modal para criação
+* criar receita credita a conta vinculada
+* criar despesa continua como `PENDING`
+* marcar despesa como paga debita a conta vinculada
 
 ---
 
-## Dashboard Improvements
+## Financial Ledger / Account Transactions
 
-Status: ✅ CONCLUÍDO
+Status: ✅ IMPLEMENTADO NO BACKEND
 
 Entregue:
 
-* Saldo Atual
-* Total Receitas do Mês
-* Total Despesas do Mês
-* Saldo do Mês
+* nova entidade `AccountTransaction`
+* registro de movimentações financeiras por conta
+* tipos de transação para crédito/débito
+* vínculo por `referenceType` e `referenceId`
+* migration inicial criada e aplicada
+* validação contra duplicidade por referência
+* controle transacional centralizado em `AccountLedgerService`
+
+Objetivo atingido:
+
+* saldo da conta passa a refletir movimentações reais
+* base pronta para extrato financeiro
+* base pronta para auditoria e reversão
 
 ---
 
-## Expense Filters
+## Delete Reversal Logic
 
-Status: ✅ CONCLUÍDO
+Status: ✅ IMPLEMENTADO NO BACKEND
 
 Entregue:
 
-* Todas
-* Pendentes
-* Pagas
+* exclusão de receita com estorno financeiro
+* exclusão de despesa paga com estorno financeiro
+* preservação da consistência entre ledger e saldo da conta
+
+Resultado:
+
+* deletar receita não deixa saldo incorreto
+* deletar despesa paga não deixa saldo incorreto
 
 ---
 
-## Income Filters
+## Concurrency Protection on Account Balance
 
-Status: ✅ CONCLUÍDO
+Status: ✅ IMPLEMENTADO NO BACKEND
 
 Entregue:
 
-* Todas
-* Recorrentes
-* Únicas
+* lock pessimista no carregamento da conta para movimentação
+* proteção contra race condition / lost update
+* índice único para evitar duplicidade de transação por referência
+
+Objetivo:
+
+* evitar inconsistência de saldo em operações concorrentes
 
 ---
 
-# Phase 2 — Organização Financeira
+# Phase 1 — Completar Integração Conta + Lançamentos
 
 Prioridade: ALTA
 
-Objetivo: tornar o sistema realmente útil para planejamento financeiro.
+Objetivo: concluir a integração do novo domínio financeiro no frontend.
 
 ---
 
-## Expense Categories
+## Expense Form with Account Selection
 
-Status: ⏸ ADIADO
+Status: ⏳ EM ANDAMENTO
 
-Motivo:
+Backend: ✅ pronto  
+Frontend form: ✅ componentes ajustados  
+Página de despesas: ⏳ precisa concluir integração final
 
-A feature exige evolução estrutural no backend:
+Escopo:
 
-* nova entidade de categoria
-* relacionamento com Expense
-* migrations
-* DTOs novos
-* endpoints específicos
-* ajustes em criação e listagem de despesas
+* carregar contas via `/accounts`
+* exibir select de conta no modal de despesa
+* enviar `accountId` no payload
+* bloquear criação quando não houver contas cadastradas
 
-Decisão atual:
+Arquivos envolvidos:
 
-Adiado temporariamente para priorizar Projeção Financeira.
-
-Escopo futuro:
-
-* ExpenseCategory
-* categoryId/categoryName no retorno de despesas
-* CRUD de categorias
-* select de categoria no formulário de despesa
+* `components/NewExpenseForm.tsx`
+* `app/despesas/page.tsx`
 
 ---
 
-## Income Categories
+## Income Form with Account Selection
 
-Status: ⏸ ADIADO
+Status: ⏳ EM ANDAMENTO
 
-Mesmo racional de Expense Categories.
+Backend: ✅ pronto  
+Frontend form: ✅ componentes ajustados  
+Página de receitas: ⏳ precisa concluir integração final
+
+Escopo:
+
+* carregar contas via `/accounts`
+* exibir select de conta no modal de receita
+* enviar `accountId` no payload
+* bloquear criação quando não houver contas cadastradas
+
+Arquivos envolvidos:
+
+* `components/NewIncomeForm.tsx`
+* `app/receitas/page.tsx`
 
 ---
 
-## Category Reports
+## Show Account on Expense and Income Tables
 
-Status: 🔒 BLOQUEADO
+Status: ⏳ PRÓXIMO
 
-Dependência:
+Objetivo:
 
-* categorias de despesas implementadas
+mostrar na listagem qual conta foi utilizada em cada receita/despesa.
+
+Sugestão:
+
+* backend retornar `accountName` em `ExpenseResponse`
+* backend retornar `accountName` em `IncomeResponse`
+* frontend adicionar coluna "Conta" nas tabelas
+
+Exemplo:
+
+* Supermercado — Conta Corrente
+* Salário — Nubank
 
 ---
 
-# Phase 3 — Planejamento Financeiro
+# Phase 2 — Financial Visibility
 
 Prioridade: ALTA
 
-Objetivo: diferenciar o produto de um simples controle financeiro.
+Objetivo: transformar a nova base de ledger em valor visível para o usuário.
 
 ---
 
-## Financial Projection
-
-Status: ✅ CONCLUÍDO
-
-Entregue:
-
-* endpoint backend `/projection?months=N`
-* cálculo de saldo futuro mês a mês
-* uso de receitas e despesas recorrentes/únicas
-* página dedicada no frontend
-
----
-
-## Future Balance Graph
-
-Status: ✅ CONCLUÍDO
-
-Entregue:
-
-* gráfico de saldo futuro
-* horizonte configurável (3, 6, 12 meses)
-
----
-
-## Expense Forecast
-
-Status: ✅ CONCLUÍDO
-
-Entregue:
-
-* `forecastExpenses` no retorno do backend
-* listagem de despesas recorrentes consideradas na projeção
-
-Exemplo:
-
-Netflix
-R$ 55 / mês
-
-Academia
-R$ 120 / mês
-
----
-
-# Phase 4 — Experiência do Usuário
-
-Prioridade: MÉDIA
-
----
-
-## Toast Notifications
+## Account Statement / Transaction History
 
 Status: ⏳ PRÓXIMO CANDIDATO
 
-Mostrar mensagens de sucesso/erro.
+Nova feature sugerida:
 
-Exemplo:
-
-✓ Receita criada
-
-✓ Despesa marcada como paga
-
-✕ Erro ao salvar
-
----
-
-## Confirm Dialog Component
-
-Status: ⏳ PRÓXIMO CANDIDATO
-
-Substituir:
-
-window.confirm()
-
-Por:
-
-modal de confirmação customizado.
-
-Hoje usado em:
-
-* exclusão de despesas
-* exclusão de receitas
-* exclusão de contas
-
----
-
-## Loading Indicators
-
-Status: ⏳ PRÓXIMO CANDIDATO
-
-Adicionar loading em:
-
-* botões
-* tabelas
-* gráficos
-* trocas de horizonte da projeção
-
----
-
-## Mobile Responsiveness
-
-Status: ⏳ FUTURO PRÓXIMO
-
-Adaptar UI para celular.
-
-Melhorias:
-
-* sidebar colapsável
-* tabelas responsivas
-* cards reorganizados
-
----
-
-# Phase 5 — Recursos de SaaS
-
-Prioridade: MÉDIA
-
----
-
-## Household Invitations
-
-Status: 🔜 FUTURO
-
-Convidar parceiro por email.
-
-Fluxo:
-
-Usuário cria household
-Envia convite
-Outro usuário aceita
-
----
-
-## Multi User Household
-
-Status: 🔜 FUTURO
-
-Permitir múltiplos usuários por household.
-
-Papéis possíveis:
-
-owner
-member
-
----
-
-## Audit Log
-
-Status: 🔜 FUTURO
-
-Registrar mudanças importantes.
-
-Exemplo:
-
-Usuário criou despesa
-Usuário excluiu receita
-
----
-
-# Phase 6 — Recursos Avançados
-
-Prioridade: BAIXA
-
----
-
-## Financial Goals
-
-Status: 🔜 FUTURO
-
-Criar metas financeiras.
-
-Exemplo:
-
-Meta:
-
-Viagem
-R$ 10.000
-
-Progresso:
-
-R$ 3.200 / R$ 10.000
-
----
-
-## CSV Export
-
-Status: 🔜 FUTURO
-
-Exportar dados financeiros.
-
-* Despesas
-* Receitas
-* Relatórios
-
----
-
-## Reports
-
-Status: 🔜 FUTURO
-
-Relatórios financeiros completos.
-
-* Mensal
-* Anual
-* Por categoria
-
----
-
-# Phase 7 — Produto SaaS Completo
-
-Prioridade: FUTURO
-
----
-
-## Subscription Plans
-
-Plano gratuito
-Plano premium
-
----
-
-## Stripe Integration
-
-Pagamentos.
-
----
-
-## Multi Household
-
-Um usuário gerenciar múltiplos households.
-
----
-
-# Recommended Immediate Next Step
-
-Próxima implementação recomendada:
-
-1️⃣ **Toast Notifications**
-
-Depois:
-
-2️⃣ **Confirm Dialog Component**
-
-3️⃣ **Loading Indicators**
-
-4️⃣ **Mobile Responsiveness**
-
----
-
-# Why this order now
-
-Após a entrega de contas, filtros e projeção, o maior ganho incremental agora está em UX e refinamento de produto.
-
-Esse bloco melhora:
-
-* percepção de qualidade
-* feedback de ações do usuário
-* experiência de uso no dia a dia
-* preparação para uso em produção
+```http
+GET /accounts/{id}/transactions

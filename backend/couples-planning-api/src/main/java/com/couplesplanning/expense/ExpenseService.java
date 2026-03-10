@@ -1,5 +1,7 @@
 package com.couplesplanning.expense;
 
+import com.couplesplanning.account.Account;
+import com.couplesplanning.account.AccountRepository;
 import com.couplesplanning.ledger.AccountLedgerService;
 import com.couplesplanning.ledger.ReferenceType;
 import com.couplesplanning.shared.exception.BusinessException;
@@ -11,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +22,7 @@ public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
     private final AccountLedgerService accountLedgerService;
+    private final AccountRepository accountRepository;
 
     @Transactional
     public ExpenseResponse create(CreateExpenseRequest request) {
@@ -50,8 +55,11 @@ public class ExpenseService {
                 ? expenseRepository.findByHouseholdId(householdId)
                 : expenseRepository.findByHouseholdIdAndStatus(householdId, status);
 
+        Map<Long, String> accountNamesById = accountRepository.findByHouseholdId(householdId).stream()
+                .collect(Collectors.toMap(Account::getId, Account::getName));
+
         return expenses.stream()
-                .map(this::toResponse)
+                .map(expense -> toResponse(expense, accountNamesById))
                 .toList();
     }
 
@@ -172,10 +180,35 @@ public class ExpenseService {
         }
     }
 
-    private ExpenseResponse toResponse(Expense expense) {
+    private ExpenseResponse toResponse(Expense expense, Map<Long, String> accountNamesById) {
         return new ExpenseResponse(
                 expense.getId(),
                 expense.getAccountId(),
+                expense.getAccountId() != null ? accountNamesById.get(expense.getAccountId()) : null,
+                expense.getDescription(),
+                expense.getAmount(),
+                expense.getRecurrenceType(),
+                expense.getStartDate(),
+                expense.getEndDate(),
+                expense.getDayOfMonth(),
+                expense.getStatus()
+        );
+    }
+
+    private ExpenseResponse toResponse(Expense expense) {
+        String accountName = null;
+
+        if (expense.getAccountId() != null) {
+            accountName = accountRepository.findByIdAndHouseholdId(
+                    expense.getAccountId(),
+                    expense.getHouseholdId()
+            ).map(Account::getName).orElse(null);
+        }
+
+        return new ExpenseResponse(
+                expense.getId(),
+                expense.getAccountId(),
+                accountName,
                 expense.getDescription(),
                 expense.getAmount(),
                 expense.getRecurrenceType(),
