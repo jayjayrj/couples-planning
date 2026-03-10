@@ -26,3 +26,27 @@ export async function apiFetch(path: string, options?: RequestInit) {
 
   return response.json();
 }
+
+export async function getAccounts() {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch("http://localhost:8080/accounts", {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Erro ao buscar contas");
+  }
+
+  return response.json();
+}
+
+export type Account = {
+  id: number;
+  name: string;
+  type: "CHECKING" | "SAVINGS" | "CREDIT_CARD" | "CASH";
+  currentBalance: number;
+};

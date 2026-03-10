@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 public record ExpenseResponse(
         Long id,
+        Long accountId,
         String description,
         BigDecimal amount,
         RecurrenceType recurrenceType,

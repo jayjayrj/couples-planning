@@ -20,6 +20,7 @@ public class AccountService {
 
         Account account = Account.builder()
                 .householdId(householdId)
+                .currentBalance(request.initialBalance() != null ? request.initialBalance() : BigDecimal.ZERO)
                 .name(request.name())
                 .type(request.type())
                 .currentBalance(BigDecimal.ZERO)

@@ -24,7 +24,10 @@ public record CreateExpenseRequest(
 
         LocalDate endDate,
 
-        Integer dayOfMonth
+        Integer dayOfMonth,
+
+        @NotNull
+        Long accountId
 
 ) {
 }

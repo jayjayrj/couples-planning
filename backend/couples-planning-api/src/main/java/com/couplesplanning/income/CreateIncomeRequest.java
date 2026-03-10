@@ -23,6 +23,9 @@ public record CreateIncomeRequest(
 
         LocalDate endDate,
 
-        Integer dayOfMonth
+        Integer dayOfMonth,
+
+        @NotNull
+        Long accountId
 
 ) {}

@@ -11,41 +11,72 @@ O objetivo é evoluir o sistema de forma incremental, entregando valor contínuo
 Funcionalidades já implementadas:
 
 AUTH
-- registro
-- login
-- JWT
-- auth/me
+
+* registro
+* login
+* JWT
+* auth/me
 
 HOUSEHOLD
-- criação
-- seleção de household ativo
 
-ACCOUNTS (Backend)
-- CRUD completo
+* criação
+* seleção de household ativo
+
+ACCOUNTS
+
+* CRUD completo no backend
+* listagem no frontend
+* criação no frontend
+* exclusão no frontend
 
 EXPENSES
-- listar despesas
-- criar despesa
-- recorrência mensal
-- marcar como paga
-- excluir despesa
+
+* listar despesas
+* criar despesa
+* recorrência mensal
+* marcar como paga
+* excluir despesa
+* filtros: Todas / Pendentes / Pagas
 
 INCOMES
-- listar receitas
-- criar receita
-- excluir receita
+
+* listar receitas
+* criar receita
+* excluir receita
+* filtros: Todas / Recorrentes / Únicas
+
+DASHBOARD
+
+* saldo atual
+* receitas do mês
+* despesas do mês
+* saldo do mês
+* gráfico financeiro
+
+PROJECTION
+
+* endpoint `/projection?months=N`
+* projeção financeira mês a mês
+* gráfico de saldo futuro
+* página dedicada de projeção
+* seletor de horizonte (3 / 6 / 12 meses)
+* expense forecast com despesas recorrentes consideradas
 
 FRONTEND
-- login
-- dashboard
-- sidebar
-- topbar
-- páginas:
-  - despesas
-  - receitas
-- modais para criação
-- ações com ícones
-- tooltips
+
+* login
+* dashboard
+* sidebar
+* topbar
+* páginas:
+
+  * despesas
+  * receitas
+  * contas
+  * projeção
+* modais para criação
+* ações com ícones
+* tooltips
 
 ---
 
@@ -59,79 +90,61 @@ Objetivo: tornar o sistema totalmente utilizável para controle financeiro bási
 
 ## Accounts Page (Frontend)
 
-Criar tela de contas.
+Status: ✅ CONCLUÍDO
 
-Funcionalidades:
+Entregue:
 
-- listar contas
-- criar conta
-- excluir conta
+* listar contas
+* criar conta
+* excluir conta
 
-Campos:
+Campos utilizados:
 
 name
 type
-initialBalance
+currentBalance
 
 UI:
 
-tabela padrão igual despesas/receitas
-modal para criação
+* tabela padrão igual despesas/receitas
+* modal para criação
 
 ---
 
 ## Dashboard Improvements
 
-Melhorar a tela inicial com dados reais.
+Status: ✅ CONCLUÍDO
 
-Adicionar cards:
+Entregue:
 
-Saldo Atual
-Total Receitas
-Total Despesas
-Saldo do Mês
-
-Exemplo:
-
-Saldo Atual
-R$ 3.250
-
-Receitas
-R$ 8.000
-
-Despesas
-R$ 4.750
-
-Saldo do mês
-R$ 3.250
+* Saldo Atual
+* Total Receitas do Mês
+* Total Despesas do Mês
+* Saldo do Mês
 
 ---
 
 ## Expense Filters
 
-Adicionar filtros na página de despesas.
+Status: ✅ CONCLUÍDO
 
-Filtros:
+Entregue:
 
-Todas
-Pendentes
-Pagas
-
-Possível UI:
-
-[ Todas ] [ Pendentes ] [ Pagas ]
+* Todas
+* Pendentes
+* Pagas
 
 ---
 
 ## Income Filters
 
-Mesma lógica para receitas.
+Status: ✅ CONCLUÍDO
 
-Filtros:
+Entregue:
 
-Todas
-Recorrentes
-Únicas
+* Todas
+* Recorrentes
+* Únicas
 
 ---
 
@@ -145,55 +158,47 @@ Objetivo: tornar o sistema realmente útil para planejamento financeiro.
 
 ## Expense Categories
 
-Criar categorias de despesas.
+Status: ⏸ ADIADO
 
-Exemplos:
+Motivo:
 
-Moradia
-Alimentação
-Transporte
-Lazer
-Saúde
-Educação
+A feature exige evolução estrutural no backend:
 
-Campos:
+* nova entidade de categoria
+* relacionamento com Expense
+* migrations
+* DTOs novos
+* endpoints específicos
+* ajustes em criação e listagem de despesas
 
-id
-name
-householdId
+Decisão atual:
 
-Relacionamento:
+Adiado temporariamente para priorizar Projeção Financeira.
 
-expense → category
+Escopo futuro:
+
+* ExpenseCategory
+* categoryId/categoryName no retorno de despesas
+* CRUD de categorias
+* select de categoria no formulário de despesa
 
 ---
 
 ## Income Categories
 
-Categorias para receitas.
+Status: ⏸ ADIADO
 
-Exemplos:
-
-Salário
-Freelance
-Investimentos
-Outros
+Mesmo racional de Expense Categories.
 
 ---
 
 ## Category Reports
 
-Mostrar distribuição de despesas por categoria.
+Status: 🔒 BLOQUEADO
 
-Possível gráfico:
+Dependência:
 
-Pizza Chart
-
-Exemplo:
-
-Moradia 40%
-Alimentação 25%
-Transporte 10%
+* categorias de despesas implementadas
 
 ---
 
@@ -207,36 +212,36 @@ Objetivo: diferenciar o produto de um simples controle financeiro.
 
 ## Financial Projection
 
-Tela de projeção financeira futura.
+Status: ✅ CONCLUÍDO
 
-Exemplo:
+Entregue:
 
-Saldo atual: R$ 3.000
-
-Projeção:
-
-Mês 1 → R$ 4.200
-Mês 2 → R$ 5.100
-Mês 3 → R$ 6.000
-
-Baseado em:
-
-receitas recorrentes
-despesas recorrentes
+* endpoint backend `/projection?months=N`
+* cálculo de saldo futuro mês a mês
+* uso de receitas e despesas recorrentes/únicas
+* página dedicada no frontend
 
 ---
 
 ## Future Balance Graph
 
-Adicionar gráfico:
+Status: ✅ CONCLUÍDO
 
-Saldo futuro mês a mês.
+Entregue:
+
+* gráfico de saldo futuro
+* horizonte configurável (3, 6, 12 meses)
 
 ---
 
 ## Expense Forecast
 
-Mostrar impacto das despesas recorrentes.
+Status: ✅ CONCLUÍDO
+
+Entregue:
+
+* `forecastExpenses` no retorno do backend
+* listagem de despesas recorrentes consideradas na projeção
 
 Exemplo:
 
@@ -256,6 +261,8 @@ Prioridade: MÉDIA
 
 ## Toast Notifications
 
+Status: ⏳ PRÓXIMO CANDIDATO
+
 Mostrar mensagens de sucesso/erro.
 
 Exemplo:
@@ -270,6 +277,8 @@ Exemplo:
 
 ## Confirm Dialog Component
 
+Status: ⏳ PRÓXIMO CANDIDATO
+
 Substituir:
 
 window.confirm()
@@ -278,27 +287,38 @@ Por:
 
 modal de confirmação customizado.
 
+Hoje usado em:
+
+* exclusão de despesas
+* exclusão de receitas
+* exclusão de contas
+
 ---
 
 ## Loading Indicators
 
-Adicionar loading:
+Status: ⏳ PRÓXIMO CANDIDATO
 
-botões
-tabelas
-gráficos
+Adicionar loading em:
+
+* botões
+* tabelas
+* gráficos
+* trocas de horizonte da projeção
 
 ---
 
 ## Mobile Responsiveness
 
+Status: ⏳ FUTURO PRÓXIMO
+
 Adaptar UI para celular.
 
 Melhorias:
 
-sidebar colapsável
-tabelas responsivas
-cards reorganizados
+* sidebar colapsável
+* tabelas responsivas
+* cards reorganizados
 
 ---
 
@@ -309,6 +329,8 @@ Prioridade: MÉDIA
 ---
 
 ## Household Invitations
+
+Status: 🔜 FUTURO
 
 Convidar parceiro por email.
 
@@ -322,6 +344,8 @@ Outro usuário aceita
 
 ## Multi User Household
 
+Status: 🔜 FUTURO
+
 Permitir múltiplos usuários por household.
 
 Papéis possíveis:
@@ -332,6 +356,8 @@ member
 ---
 
 ## Audit Log
+
+Status: 🔜 FUTURO
 
 Registrar mudanças importantes.
 
@@ -350,6 +376,8 @@ Prioridade: BAIXA
 
 ## Financial Goals
 
+Status: 🔜 FUTURO
+
 Criar metas financeiras.
 
 Exemplo:
@@ -367,21 +395,25 @@ R$ 3.200 / R$ 10.000
 
 ## CSV Export
 
+Status: 🔜 FUTURO
+
 Exportar dados financeiros.
 
-Despesas
-Receitas
-Relatórios
+* Despesas
+* Receitas
+* Relatórios
 
 ---
 
 ## Reports
 
+Status: 🔜 FUTURO
+
 Relatórios financeiros completos.
 
-Mensal
-Anual
-Por categoria
+* Mensal
+* Anual
+* Por categoria
 
 ---
 
@@ -410,14 +442,29 @@ Um usuário gerenciar múltiplos households.
 
 ---
 
-# Immediate Next Step
+# Recommended Immediate Next Step
 
 Próxima implementação recomendada:
 
-1️⃣ Criar **Accounts Page no frontend**
+1️⃣ **Toast Notifications**
 
 Depois:
 
-2️⃣ Melhorar **Dashboard**
+2️⃣ **Confirm Dialog Component**
 
-3️⃣ Implementar **Expense Categories**
+3️⃣ **Loading Indicators**
+
+4️⃣ **Mobile Responsiveness**
+
+---
+
+# Why this order now
+
+Após a entrega de contas, filtros e projeção, o maior ganho incremental agora está em UX e refinamento de produto.
+
+Esse bloco melhora:
+
+* percepção de qualidade
+* feedback de ações do usuário
+* experiência de uso no dia a dia
+* preparação para uso em produção

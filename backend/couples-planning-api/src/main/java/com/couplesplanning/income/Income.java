@@ -24,6 +24,9 @@ public class Income {
     @Column(name = "household_id", nullable = false)
     private Long householdId;
 
+    @Column(name = "account_id")
+    private Long accountId;
+
     @Column(nullable = false)
     private String description;
 
@@ -42,6 +45,9 @@ public class Income {
 
     @Column(name = "day_of_month")
     private Integer dayOfMonth;
+
+    @Column(name = "realized_at")
+    private LocalDateTime realizedAt;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

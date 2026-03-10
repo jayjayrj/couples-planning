@@ -23,6 +23,9 @@ public class Expense {
     @Column(name = "household_id", nullable = false)
     private Long householdId;
 
+    @Column(name = "account_id")
+    private Long accountId;
+
     @Column(nullable = false)
     private String description;
 
@@ -45,6 +48,9 @@ public class Expense {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ExpenseStatus status;
+
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

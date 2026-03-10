@@ -3,7 +3,15 @@
 import { useState } from "react";
 import { apiFetch } from "../lib/api";
 
+type Account = {
+  id: number;
+  name: string;
+  type: "CHECKING" | "SAVINGS" | "CREDIT_CARD" | "CASH";
+  currentBalance: number;
+};
+
 type Props = {
+  accounts: Account[];
   onCreated: () => void;
   onCancel: () => void;
 };
@@ -27,17 +35,23 @@ const labelStyle: React.CSSProperties = {
   color: "#374151",
 };
 
-export default function NewIncomeForm({ onCreated, onCancel }: Props) {
+export default function NewIncomeForm({ accounts, onCreated, onCancel }: Props) {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [recurrenceType, setRecurrenceType] = useState("ONCE");
   const [startDate, setStartDate] = useState("");
   const [dayOfMonth, setDayOfMonth] = useState("");
+  const [accountId, setAccountId] = useState("");
 
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!accountId) {
+      alert("Selecione uma conta");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -51,6 +65,7 @@ export default function NewIncomeForm({ onCreated, onCancel }: Props) {
           startDate,
           endDate: null,
           dayOfMonth: recurrenceType === "MONTHLY" ? Number(dayOfMonth) : null,
+          accountId: Number(accountId),
         }),
       });
 
@@ -59,6 +74,7 @@ export default function NewIncomeForm({ onCreated, onCancel }: Props) {
       setStartDate("");
       setDayOfMonth("");
       setRecurrenceType("ONCE");
+      setAccountId("");
 
       onCreated();
     } catch (err) {
@@ -68,6 +84,8 @@ export default function NewIncomeForm({ onCreated, onCancel }: Props) {
       setLoading(false);
     }
   }
+
+  const hasAccounts = accounts.length > 0;
 
   return (
     <form
@@ -102,6 +120,22 @@ export default function NewIncomeForm({ onCreated, onCancel }: Props) {
         </p>
       </div>
 
+      {!hasAccounts && (
+        <div
+          style={{
+            marginBottom: "16px",
+            padding: "12px 14px",
+            borderRadius: "10px",
+            background: "#fef3f2",
+            border: "1px solid #fecdca",
+            color: "#b42318",
+            fontSize: "14px",
+          }}
+        >
+          Você precisa cadastrar uma conta antes de criar uma receita.
+        </div>
+      )}
+
       <div
         style={{
           display: "grid",
@@ -118,6 +152,23 @@ export default function NewIncomeForm({ onCreated, onCancel }: Props) {
             onChange={(e) => setDescription(e.target.value)}
             required
           />
+        </div>
+
+        <div>
+          <label style={labelStyle}>Conta</label>
+          <select
+            style={inputStyle}
+            value={accountId}
+            onChange={(e) => setAccountId(e.target.value)}
+            required
+          >
+            <option value="">Selecione uma conta</option>
+            {accounts.map((account) => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -198,14 +249,14 @@ export default function NewIncomeForm({ onCreated, onCancel }: Props) {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !hasAccounts}
           style={{
             padding: "10px 16px",
-            background: "#6366f1",
+            background: loading || !hasAccounts ? "#a5b4fc" : "#6366f1",
             color: "white",
             border: "none",
             borderRadius: "10px",
-            cursor: "pointer",
+            cursor: loading || !hasAccounts ? "not-allowed" : "pointer",
             fontWeight: 700,
           }}
         >

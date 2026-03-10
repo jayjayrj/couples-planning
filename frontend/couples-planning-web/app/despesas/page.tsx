@@ -20,6 +20,13 @@ type Expense = {
   status: "PENDING" | "PAID";
 };
 
+type Account = {
+  id: number;
+  name: string;
+  type: "CHECKING" | "SAVINGS" | "CREDIT_CARD" | "CASH";
+  currentBalance: number;
+};
+
 type ExpenseFilter = "ALL" | "PENDING" | "PAID";
 
 function PlusIcon() {
@@ -252,6 +259,7 @@ function FilterButton({
 
 export default function DespesasPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
   const [deleteLoadingId, setDeleteLoadingId] = useState<number | null>(null);
@@ -271,6 +279,15 @@ export default function DespesasPage() {
       setError("Não foi possível carregar as despesas.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadAccounts() {
+    try {
+      const data = await apiFetch("/accounts");
+      setAccounts(data);
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -316,6 +333,7 @@ export default function DespesasPage() {
 
   useEffect(() => {
     loadExpenses();
+    loadAccounts();
   }, []);
 
   const filteredExpenses = useMemo(() => {
@@ -500,6 +518,7 @@ export default function DespesasPage() {
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
           <NewExpenseForm
+            accounts={accounts}
             onCreated={() => {
               setShowModal(false);
               loadExpenses();

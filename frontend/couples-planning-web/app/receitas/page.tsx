@@ -19,6 +19,13 @@ type Income = {
   dayOfMonth: number | null;
 };
 
+type Account = {
+  id: number;
+  name: string;
+  type: "CHECKING" | "SAVINGS" | "CREDIT_CARD" | "CASH";
+  currentBalance: number;
+};
+
 type IncomeFilter = "ALL" | "MONTHLY" | "ONCE";
 
 function PlusIcon() {
@@ -227,6 +234,7 @@ function FilterButton({
 
 export default function ReceitasPage() {
   const [incomes, setIncomes] = useState<Income[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteLoadingId, setDeleteLoadingId] = useState<number | null>(null);
   const [error, setError] = useState("");
@@ -245,6 +253,15 @@ export default function ReceitasPage() {
       setError("Não foi possível carregar as receitas.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadAccounts() {
+    try {
+      const data = await apiFetch("/accounts");
+      setAccounts(data);
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -273,6 +290,7 @@ export default function ReceitasPage() {
 
   useEffect(() => {
     loadIncomes();
+    loadAccounts();
   }, []);
 
   const filteredIncomes = useMemo(() => {
@@ -425,6 +443,7 @@ export default function ReceitasPage() {
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
           <NewIncomeForm
+            accounts={accounts}
             onCreated={() => {
               setShowModal(false);
               loadIncomes();

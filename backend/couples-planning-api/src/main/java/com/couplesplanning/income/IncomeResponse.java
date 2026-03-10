@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 public record IncomeResponse(
         Long id,
+        Long accountId,
         String description,
         BigDecimal amount,
         RecurrenceType recurrenceType,

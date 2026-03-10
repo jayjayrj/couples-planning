@@ -1,5 +1,7 @@
 package com.couplesplanning.expense;
 
+import com.couplesplanning.ledger.AccountLedgerService;
+import com.couplesplanning.ledger.ReferenceType;
 import com.couplesplanning.shared.exception.BusinessException;
 import com.couplesplanning.shared.exception.ResourceNotFoundException;
 import com.couplesplanning.shared.tenancy.HouseholdContext;
@@ -15,6 +17,7 @@ import java.util.List;
 public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
+    private final AccountLedgerService accountLedgerService;
 
     @Transactional
     public ExpenseResponse create(CreateExpenseRequest request) {
@@ -24,6 +27,7 @@ public class ExpenseService {
 
         Expense expense = Expense.builder()
                 .householdId(householdId)
+                .accountId(request.accountId())
                 .description(request.description())
                 .amount(request.amount())
                 .recurrenceType(request.recurrenceType())
@@ -95,18 +99,52 @@ public class ExpenseService {
         Expense expense = expenseRepository.findByIdAndHouseholdId(expenseId, householdId)
                 .orElseThrow(() -> new ResourceNotFoundException("Expense not found"));
 
+        if (expense.getStatus() == ExpenseStatus.PAID) {
+            throw new BusinessException("Expense already paid");
+        }
+
+        if (expense.getAccountId() == null) {
+            throw new BusinessException("Expense has no account assigned");
+        }
+
         expense.setStatus(ExpenseStatus.PAID);
+        expense.setPaidAt(LocalDateTime.now());
 
         Expense saved = expenseRepository.save(expense);
+
+        accountLedgerService.debit(
+                householdId,
+                saved.getAccountId(),
+                saved.getAmount(),
+                saved.getStartDate(),
+                ReferenceType.EXPENSE,
+                saved.getId(),
+                saved.getDescription()
+        );
+
         return toResponse(saved);
     }
 
     @Transactional
     public void delete(Long expenseId) {
+
         Long householdId = HouseholdContext.getCurrentHouseholdId();
 
         Expense expense = expenseRepository.findByIdAndHouseholdId(expenseId, householdId)
                 .orElseThrow(() -> new ResourceNotFoundException("Expense not found"));
+
+        if (expense.getStatus() == ExpenseStatus.PAID && expense.getAccountId() != null) {
+
+            accountLedgerService.credit(
+                    householdId,
+                    expense.getAccountId(),
+                    expense.getAmount(),
+                    expense.getStartDate(),
+                    ReferenceType.EXPENSE,
+                    expense.getId(),
+                    "Reversal: " + expense.getDescription()
+            );
+        }
 
         expenseRepository.delete(expense);
     }
@@ -137,6 +175,7 @@ public class ExpenseService {
     private ExpenseResponse toResponse(Expense expense) {
         return new ExpenseResponse(
                 expense.getId(),
+                expense.getAccountId(),
                 expense.getDescription(),
                 expense.getAmount(),
                 expense.getRecurrenceType(),
