@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AuthGuard from "../../components/AuthGuard";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
@@ -18,6 +18,8 @@ type Income = {
   endDate: string | null;
   dayOfMonth: number | null;
 };
+
+type IncomeFilter = "ALL" | "MONTHLY" | "ONCE";
 
 function PlusIcon() {
   return (
@@ -64,7 +66,14 @@ function DeleteIcon({ enabled }: { enabled: boolean }) {
         transition: "0.2s ease",
       }}
     >
-      <rect x="5" y="7" width="14" height="13" rx="2" fill={enabled ? "#ef4444" : "#9ca3af"} />
+      <rect
+        x="5"
+        y="7"
+        width="14"
+        height="13"
+        rx="2"
+        fill={enabled ? "#ef4444" : "#9ca3af"}
+      />
       <path
         d="M9 4H15"
         stroke={enabled ? "#ef4444" : "#9ca3af"}
@@ -177,12 +186,52 @@ function ActionButton({
   );
 }
 
+function FilterButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        padding: "8px 14px",
+        borderRadius: "999px",
+        border: active ? "1px solid #6366f1" : "1px solid #e5e7eb",
+        background: active ? "#6366f1" : "#ffffff",
+        color: active ? "#ffffff" : "#374151",
+        fontWeight: 600,
+        cursor: "pointer",
+        transition: "all 0.15s ease",
+      }}
+      onMouseEnter={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = "#f8fafc";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = "#ffffff";
+        }
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
 export default function ReceitasPage() {
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteLoadingId, setDeleteLoadingId] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [filter, setFilter] = useState<IncomeFilter>("ALL");
 
   async function loadIncomes() {
     try {
@@ -226,6 +275,14 @@ export default function ReceitasPage() {
     loadIncomes();
   }, []);
 
+  const filteredIncomes = useMemo(() => {
+    if (filter === "ALL") {
+      return incomes;
+    }
+
+    return incomes.filter((income) => income.recurrenceType === filter);
+  }, [incomes, filter]);
+
   return (
     <AuthGuard>
       <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
@@ -248,6 +305,24 @@ export default function ReceitasPage() {
                 <p style={{ margin: "8px 0 0 0", color: "#6b7280" }}>
                   Gerencie as receitas do household ativo.
                 </p>
+
+                <div style={{ marginTop: "16px", display: "flex", gap: "8px" }}>
+                  <FilterButton
+                    label="Todas"
+                    active={filter === "ALL"}
+                    onClick={() => setFilter("ALL")}
+                  />
+                  <FilterButton
+                    label="Recorrentes"
+                    active={filter === "MONTHLY"}
+                    onClick={() => setFilter("MONTHLY")}
+                  />
+                  <FilterButton
+                    label="Únicas"
+                    active={filter === "ONCE"}
+                    onClick={() => setFilter("ONCE")}
+                  />
+                </div>
               </div>
 
               <div style={{ display: "flex", gap: "12px" }}>
@@ -302,15 +377,17 @@ export default function ReceitasPage() {
                   </thead>
 
                   <tbody>
-                    {incomes.length === 0 && (
+                    {filteredIncomes.length === 0 && (
                       <tr>
                         <td colSpan={5} style={{ padding: "24px", textAlign: "center" }}>
-                          Nenhuma receita cadastrada.
+                          {filter === "ALL" && "Nenhuma receita cadastrada."}
+                          {filter === "MONTHLY" && "Nenhuma receita recorrente encontrada."}
+                          {filter === "ONCE" && "Nenhuma receita única encontrada."}
                         </td>
                       </tr>
                     )}
 
-                    {incomes.map((income) => {
+                    {filteredIncomes.map((income) => {
                       const canDelete = deleteLoadingId !== income.id;
 
                       return (

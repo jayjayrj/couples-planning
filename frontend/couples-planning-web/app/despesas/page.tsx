@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AuthGuard from "../../components/AuthGuard";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
@@ -19,6 +19,8 @@ type Expense = {
   dayOfMonth: number | null;
   status: "PENDING" | "PAID";
 };
+
+type ExpenseFilter = "ALL" | "PENDING" | "PAID";
 
 function PlusIcon() {
   return (
@@ -135,7 +137,14 @@ function DeleteIcon({ enabled }: { enabled: boolean }) {
         transition: "0.2s ease",
       }}
     >
-      <rect x="5" y="7" width="14" height="13" rx="2" fill={enabled ? "#ef4444" : "#9ca3af"} />
+      <rect
+        x="5"
+        y="7"
+        width="14"
+        height="13"
+        rx="2"
+        fill={enabled ? "#ef4444" : "#9ca3af"}
+      />
       <path
         d="M9 4H15"
         stroke={enabled ? "#ef4444" : "#9ca3af"}
@@ -202,6 +211,45 @@ function ToolbarIconButton({
   );
 }
 
+function FilterButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        padding: "8px 14px",
+        borderRadius: "999px",
+        border: active ? "1px solid #6366f1" : "1px solid #e5e7eb",
+        background: active ? "#6366f1" : "#ffffff",
+        color: active ? "#ffffff" : "#374151",
+        fontWeight: 600,
+        cursor: "pointer",
+        transition: "all 0.15s ease",
+      }}
+      onMouseEnter={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = "#f8fafc";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = "#ffffff";
+        }
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
 export default function DespesasPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
@@ -209,6 +257,7 @@ export default function DespesasPage() {
   const [deleteLoadingId, setDeleteLoadingId] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [filter, setFilter] = useState<ExpenseFilter>("ALL");
 
   async function loadExpenses() {
     try {
@@ -269,6 +318,14 @@ export default function DespesasPage() {
     loadExpenses();
   }, []);
 
+  const filteredExpenses = useMemo(() => {
+    if (filter === "ALL") {
+      return expenses;
+    }
+
+    return expenses.filter((expense) => expense.status === filter);
+  }, [expenses, filter]);
+
   return (
     <AuthGuard>
       <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
@@ -291,6 +348,24 @@ export default function DespesasPage() {
                 <p style={{ margin: "8px 0 0 0", color: "#6b7280" }}>
                   Gerencie as despesas do household ativo.
                 </p>
+
+                <div style={{ marginTop: "16px", display: "flex", gap: "8px" }}>
+                  <FilterButton
+                    label="Todas"
+                    active={filter === "ALL"}
+                    onClick={() => setFilter("ALL")}
+                  />
+                  <FilterButton
+                    label="Pendentes"
+                    active={filter === "PENDING"}
+                    onClick={() => setFilter("PENDING")}
+                  />
+                  <FilterButton
+                    label="Pagas"
+                    active={filter === "PAID"}
+                    onClick={() => setFilter("PAID")}
+                  />
+                </div>
               </div>
 
               <div style={{ display: "flex", gap: "12px" }}>
@@ -346,15 +421,17 @@ export default function DespesasPage() {
                   </thead>
 
                   <tbody>
-                    {expenses.length === 0 && (
+                    {filteredExpenses.length === 0 && (
                       <tr>
                         <td colSpan={6} style={{ padding: "24px", textAlign: "center" }}>
-                          Nenhuma despesa cadastrada.
+                          {filter === "ALL" && "Nenhuma despesa cadastrada."}
+                          {filter === "PENDING" && "Nenhuma despesa pendente encontrada."}
+                          {filter === "PAID" && "Nenhuma despesa paga encontrada."}
                         </td>
                       </tr>
                     )}
 
-                    {expenses.map((expense) => {
+                    {filteredExpenses.map((expense) => {
                       const canMarkAsPaid =
                         expense.status === "PENDING" && actionLoadingId !== expense.id;
 
