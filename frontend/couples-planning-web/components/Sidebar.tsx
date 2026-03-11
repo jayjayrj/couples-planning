@@ -75,24 +75,11 @@ export default function Sidebar({
               }),
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-          <div
-            style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "12px",
-              background: "linear-gradient(135deg, #93c5fd, #6366f1)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fff",
-            }}
-          >
-            <Heart size={20} />
-          </div>
-          <div style={{ fontWeight: 700, fontSize: "24px", color: "#1f2937" }}>
-            Couples Planning
-          </div>
+        <div style={{ marginBottom: "24px" }}>
+          <img
+            src="/logo-top-right.png"
+            alt="HomeLedger"
+          />
         </div>
 
         <nav style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
