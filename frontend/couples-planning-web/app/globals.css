@@ -12,13 +12,6 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
@@ -54,6 +47,7 @@ body {
 .app-content {
   flex: 1;
   min-width: 0;
+  color: #111827;
 }
 
 @media (max-width: 768px) {
@@ -154,10 +148,21 @@ body {
   max-width: 1240px;
   margin: 0 auto;
   width: 100%;
+  color: #111827;
 }
 
 @media (max-width: 768px) {
   .page-container {
     padding: 20px 16px;
   }
+}
+
+.page-container h1,
+.page-container h2,
+.page-container h3,
+.page-container th,
+.page-container td,
+.page-container label,
+.page-container button {
+  color: inherit;
 }

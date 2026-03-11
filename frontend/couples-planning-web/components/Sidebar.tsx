@@ -42,7 +42,7 @@ export default function Sidebar({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.35)",
+            background: "rgba(15, 23, 42, 0.08)",
             zIndex: 30,
           }}
         />

@@ -24,7 +24,7 @@ export default function LoginPage() {
 
       localStorage.removeItem("accessToken");
       localStorage.removeItem("householdId");
-      
+
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
