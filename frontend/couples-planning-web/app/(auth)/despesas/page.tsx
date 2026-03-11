@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import AuthGuard from "../../components/AuthGuard";
-import Sidebar from "../../components/Sidebar";
-import Topbar from "../../components/Topbar";
-import Modal from "../../components/Modal";
-import NewExpenseForm from "../../components/NewExpenseForm";
-import { apiFetch } from "../../lib/api";
-import { formatCurrency } from "../../lib/currency";
+import AuthGuard from "../../../components/AuthGuard";
+import Modal from "../../../components/Modal";
+import NewExpenseForm from "../../../components/NewExpenseForm";
+import { apiFetch } from "../../../lib/api";
+import { formatCurrency } from "../../../lib/currency";
 
 type Expense = {
   id: number;
@@ -348,176 +346,169 @@ export default function DespesasPage() {
 
   return (
     <AuthGuard>
-      <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
-        <Sidebar />
+      <main className="page-container">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            marginBottom: "24px",
+          }}
+        >
+          <div>
+            <h1 style={{ margin: 0 }}>Despesas</h1>
+            <p style={{ margin: "8px 0 0 0", color: "#6b7280" }}>
+              Gerencie as despesas do household ativo.
+            </p>
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          <Topbar />
+            <div style={{ marginTop: "16px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <FilterButton
+                label="Todas"
+                active={filter === "ALL"}
+                onClick={() => setFilter("ALL")}
+              />
+              <FilterButton
+                label="Pendentes"
+                active={filter === "PENDING"}
+                onClick={() => setFilter("PENDING")}
+              />
+              <FilterButton
+                label="Pagas"
+                active={filter === "PAID"}
+                onClick={() => setFilter("PAID")}
+              />
+            </div>
+          </div>
 
-          <main style={{ padding: "32px" }}>
-            <div
+          <div style={{ display: "flex", gap: "12px" }}>
+            <ToolbarIconButton
+              title="Nova despesa"
+              onClick={() => setShowModal(true)}
+              dark
+            >
+              <PlusIcon />
+            </ToolbarIconButton>
+
+            <ToolbarIconButton
+              title="Recarregar despesas"
+              onClick={loadExpenses}
+            >
+              <RefreshIcon />
+            </ToolbarIconButton>
+          </div>
+        </div>
+
+        {loading && <p>Carregando despesas...</p>}
+
+        {error && (
+          <p style={{ color: "#dc2626", fontWeight: 600 }}>
+            {error}
+          </p>
+        )}
+
+        {!loading && !error && (
+          <div
+            style={{
+              background: "white",
+              borderRadius: "16px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+              overflowX: "auto",
+            }}
+          >
+            <table
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                marginBottom: "24px",
+                width: "100%",
+                minWidth: "920px",
+                borderCollapse: "collapse",
               }}
             >
-              <div>
-                <h1 style={{ margin: 0 }}>Despesas</h1>
-                <p style={{ margin: "8px 0 0 0", color: "#6b7280" }}>
-                  Gerencie as despesas do household ativo.
-                </p>
+              <thead>
+                <tr style={{ background: "#f8fafc", textAlign: "left" }}>
+                  <th style={{ padding: "16px" }}>Descrição</th>
+                  <th style={{ padding: "16px" }}>Conta</th>
+                  <th style={{ padding: "16px" }}>Valor</th>
+                  <th style={{ padding: "16px" }}>Recorrência</th>
+                  <th style={{ padding: "16px" }}>Data Inicial</th>
+                  <th style={{ padding: "16px" }}>Status</th>
+                  <th style={{ padding: "16px" }}>Ações</th>
+                </tr>
+              </thead>
 
-                <div style={{ marginTop: "16px", display: "flex", gap: "8px" }}>
-                  <FilterButton
-                    label="Todas"
-                    active={filter === "ALL"}
-                    onClick={() => setFilter("ALL")}
-                  />
-                  <FilterButton
-                    label="Pendentes"
-                    active={filter === "PENDING"}
-                    onClick={() => setFilter("PENDING")}
-                  />
-                  <FilterButton
-                    label="Pagas"
-                    active={filter === "PAID"}
-                    onClick={() => setFilter("PAID")}
-                  />
-                </div>
-              </div>
+              <tbody>
+                {filteredExpenses.length === 0 && (
+                  <tr>
+                    <td colSpan={7} style={{ padding: "24px", textAlign: "center" }}>
+                      {filter === "ALL" && "Nenhuma despesa cadastrada."}
+                      {filter === "PENDING" && "Nenhuma despesa pendente encontrada."}
+                      {filter === "PAID" && "Nenhuma despesa paga encontrada."}
+                    </td>
+                  </tr>
+                )}
 
-              <div style={{ display: "flex", gap: "12px" }}>
-                <ToolbarIconButton
-                  title="Nova despesa"
-                  onClick={() => setShowModal(true)}
-                  dark
-                >
-                  <PlusIcon />
-                </ToolbarIconButton>
+                {filteredExpenses.map((expense) => {
+                  const canMarkAsPaid =
+                    expense.status === "PENDING" && actionLoadingId !== expense.id;
 
-                <ToolbarIconButton
-                  title="Recarregar despesas"
-                  onClick={loadExpenses}
-                >
-                  <RefreshIcon />
-                </ToolbarIconButton>
-              </div>
-            </div>
+                  const canDelete = deleteLoadingId !== expense.id;
 
-            {loading && <p>Carregando despesas...</p>}
+                  return (
+                    <tr key={expense.id} style={{ borderTop: "1px solid #e5e7eb" }}>
+                      <td style={{ padding: "16px" }}>{expense.description}</td>
+                      <td style={{ padding: "16px" }}>{expense.accountName ?? "-"}</td>
+                      <td style={{ padding: "16px" }}>
+                        {formatCurrency(expense.amount)}
+                      </td>
+                      <td style={{ padding: "16px" }}>
+                        {expense.recurrenceType === "MONTHLY" ? "Mensal" : "Única"}
+                      </td>
+                      <td style={{ padding: "16px" }}>{expense.startDate}</td>
+                      <td style={{ padding: "16px" }}>
+                        <span
+                          style={{
+                            padding: "6px 10px",
+                            borderRadius: "999px",
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            background:
+                              expense.status === "PAID" ? "#dcfce7" : "#fee2e2",
+                            color:
+                              expense.status === "PAID" ? "#166534" : "#991b1b",
+                          }}
+                        >
+                          {expense.status === "PAID" ? "Paga" : "Pendente"}
+                        </span>
+                      </td>
+                      <td style={{ padding: "16px" }}>
+                        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                          <ActionButton
+                            enabled={canMarkAsPaid}
+                            title={
+                              expense.status === "PENDING"
+                                ? "Marcar como paga"
+                                : "Despesa já está paga"
+                            }
+                            onClick={() => handleMarkAsPaid(expense.id)}
+                          >
+                            <PayIcon enabled={canMarkAsPaid} />
+                          </ActionButton>
 
-            {error && (
-              <p style={{ color: "#dc2626", fontWeight: 600 }}>
-                {error}
-              </p>
-            )}
-
-            {!loading && !error && (
-              <div
-                style={{
-                  background: "white",
-                  borderRadius: "16px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                  overflow: "hidden",
-                }}
-              >
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                  }}
-                >
-                  <thead>
-                    <tr style={{ background: "#f8fafc", textAlign: "left" }}>
-                      <th style={{ padding: "16px" }}>Descrição</th>
-                      <th style={{ padding: "16px" }}>Conta</th>
-                      <th style={{ padding: "16px" }}>Valor</th>
-                      <th style={{ padding: "16px" }}>Recorrência</th>
-                      <th style={{ padding: "16px" }}>Data Inicial</th>
-                      <th style={{ padding: "16px" }}>Status</th>
-                      <th style={{ padding: "16px" }}>Ações</th>
+                          <ActionButton
+                            enabled={canDelete}
+                            title={canDelete ? "Excluir despesa" : "Excluindo despesa..."}
+                            onClick={() => handleDeleteExpense(expense.id)}
+                          >
+                            <DeleteIcon enabled={canDelete} />
+                          </ActionButton>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-
-                  <tbody>
-                    {filteredExpenses.length === 0 && (
-                      <tr>
-                        <td colSpan={7} style={{ padding: "24px", textAlign: "center" }}>
-                          {filter === "ALL" && "Nenhuma despesa cadastrada."}
-                          {filter === "PENDING" && "Nenhuma despesa pendente encontrada."}
-                          {filter === "PAID" && "Nenhuma despesa paga encontrada."}
-                        </td>
-                      </tr>
-                    )}
-
-                    {filteredExpenses.map((expense) => {
-                      const canMarkAsPaid =
-                        expense.status === "PENDING" && actionLoadingId !== expense.id;
-
-                      const canDelete = deleteLoadingId !== expense.id;
-
-                      return (
-                        <tr key={expense.id} style={{ borderTop: "1px solid #e5e7eb" }}>
-                          <td style={{ padding: "16px" }}>{expense.description}</td>
-                          <td style={{ padding: "16px" }}>{expense.accountName ?? "-"}</td>
-                          <td style={{ padding: "16px" }}>
-                            {formatCurrency(expense.amount)}
-                          </td>
-                          <td style={{ padding: "16px" }}>
-                            {expense.recurrenceType === "MONTHLY" ? "Mensal" : "Única"}
-                          </td>
-                          <td style={{ padding: "16px" }}>{expense.startDate}</td>
-                          <td style={{ padding: "16px" }}>
-                            <span
-                              style={{
-                                padding: "6px 10px",
-                                borderRadius: "999px",
-                                fontSize: "12px",
-                                fontWeight: 700,
-                                background:
-                                  expense.status === "PAID" ? "#dcfce7" : "#fee2e2",
-                                color:
-                                  expense.status === "PAID" ? "#166534" : "#991b1b",
-                              }}
-                            >
-                              {expense.status === "PAID" ? "Paga" : "Pendente"}
-                            </span>
-                          </td>
-                          <td style={{ padding: "16px" }}>
-                            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                              <ActionButton
-                                enabled={canMarkAsPaid}
-                                title={
-                                  expense.status === "PENDING"
-                                    ? "Marcar como paga"
-                                    : "Despesa já está paga"
-                                }
-                                onClick={() => handleMarkAsPaid(expense.id)}
-                              >
-                                <PayIcon enabled={canMarkAsPaid} />
-                              </ActionButton>
-
-                              <ActionButton
-                                enabled={canDelete}
-                                title={canDelete ? "Excluir despesa" : "Excluindo despesa..."}
-                                onClick={() => handleDeleteExpense(expense.id)}
-                              >
-                                <DeleteIcon enabled={canDelete} />
-                              </ActionButton>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </main>
-        </div>
-      </div>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </main>
 
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>

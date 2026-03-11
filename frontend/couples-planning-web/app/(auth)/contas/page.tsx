@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AuthGuard from "../../components/AuthGuard";
-import Sidebar from "../../components/Sidebar";
-import Topbar from "../../components/Topbar";
-import Modal from "../../components/Modal";
-import NovaContaForm from "../../components/NovaContaForm";
-import { apiFetch } from "../../lib/api";
-import { formatCurrency } from "../../lib/currency";
+import AuthGuard from "../../../components/AuthGuard";
+import Modal from "../../../components/Modal";
+import NovaContaForm from "../../../components/NovaContaForm";
+import { apiFetch } from "../../../lib/api";
+import { formatCurrency } from "../../../lib/currency";
 
 type Account = {
   id: number;
@@ -244,63 +242,57 @@ export default function ContasPage() {
 
   return (
     <AuthGuard>
-      <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
-        <Sidebar />
+      <main className="page-container">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            marginBottom: "24px",
+          }}
+        >
+          <div>
+            <h1 style={{ margin: 0 }}>Contas</h1>
+            <p style={{ margin: "8px 0 0 0", color: "#6b7280" }}>
+              Gerencie as contas do household ativo.
+            </p>
+          </div>
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          <Topbar />
-
-          <main style={{ padding: "32px" }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                marginBottom: "24px",
-              }}
+          <div style={{ display: "flex", gap: "12px" }}>
+            <ToolbarIconButton
+              title="Nova conta"
+              onClick={() => setShowModal(true)}
+              dark
             >
-              <div>
-                <h1 style={{ margin: 0 }}>Contas</h1>
-                <p style={{ margin: "8px 0 0 0", color: "#6b7280" }}>
-                  Gerencie as contas do household ativo.
-                </p>
-              </div>
+              <PlusIcon />
+            </ToolbarIconButton>
 
-              <div style={{ display: "flex", gap: "12px" }}>
-                <ToolbarIconButton
-                  title="Nova conta"
-                  onClick={() => setShowModal(true)}
-                  dark
-                >
-                  <PlusIcon />
-                </ToolbarIconButton>
+            <ToolbarIconButton
+              title="Recarregar contas"
+              onClick={loadAccounts}
+            >
+              <RefreshIcon />
+            </ToolbarIconButton>
+          </div>
+        </div>
 
-                <ToolbarIconButton
-                  title="Recarregar contas"
-                  onClick={loadAccounts}
-                >
-                  <RefreshIcon />
-                </ToolbarIconButton>
-              </div>
-            </div>
+        {loading && <p>Carregando contas...</p>}
 
-            {loading && <p>Carregando contas...</p>}
+        {error && (
+          <p style={{ color: "#dc2626", fontWeight: 600 }}>
+            {error}
+          </p>
+        )}
 
-            {error && (
-              <p style={{ color: "#dc2626", fontWeight: 600 }}>
-                {error}
-              </p>
-            )}
-
-            {!loading && !error && (
-              <div
-                style={{
-                  background: "white",
-                  borderRadius: "16px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                  overflow: "hidden",
-                }}
-              >
+        {!loading && !error && (
+          <div
+            style={{
+              background: "white",
+              borderRadius: "16px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+              overflow: "hidden",
+            }}
+          >
                 <table
                   style={{
                     width: "100%",
@@ -354,22 +346,20 @@ export default function ContasPage() {
                   </tbody>
                 </table>
               </div>
-            )}
-          </main>
-        </div>
-      </div>
+                    )}
+                  </main>
 
-      {showModal && (
-        <Modal onClose={() => setShowModal(false)}>
-          <NovaContaForm
-            onCreated={() => {
-              setShowModal(false);
-              loadAccounts();
-            }}
-            onCancel={() => setShowModal(false)}
-          />
-        </Modal>
-      )}
-    </AuthGuard>
-  );
+                  {showModal && (
+                    <Modal onClose={() => setShowModal(false)}>
+                      <NovaContaForm
+                        onCreated={() => {
+                          setShowModal(false);
+                          loadAccounts();
+                        }}
+                        onCancel={() => setShowModal(false)}
+                      />
+                    </Modal>
+                  )}
+                </AuthGuard>
+              );
 }

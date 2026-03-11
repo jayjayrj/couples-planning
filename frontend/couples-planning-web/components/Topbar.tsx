@@ -2,7 +2,12 @@
 
 import { useRouter } from "next/navigation";
 
-export default function Topbar() {
+type Props = {
+  onMenuClick?: () => void;
+  householdName?: string;
+};
+
+export default function Topbar({ onMenuClick, householdName }: Props) {
   const router = useRouter();
 
   function handleLogout() {
@@ -14,31 +19,44 @@ export default function Topbar() {
   return (
     <header
       style={{
-        height: "72px",
+        height: "88px",
         background: "#ffffff",
         borderBottom: "1px solid #e5e7eb",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         padding: "0 24px",
+        gap: "16px",
       }}
     >
-      <div>
-        <p style={{ margin: 0, fontSize: "14px", color: "#6b7280" }}>
-          Household ativo
-        </p>
-        <h2 style={{ margin: 0, fontSize: "20px", color: "#111827" }}>
-          Casa Jay e Parceira
-        </h2>
+      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+        <button
+          onClick={onMenuClick}
+          className="mobile-menu-button"
+          style={{
+            width: "42px",
+            height: "42px",
+            borderRadius: "10px",
+            border: "1px solid #e5e7eb",
+            background: "#ffffff",
+            cursor: "pointer",
+            fontSize: "20px",
+          }}
+        >
+          ☰
+        </button>
+
+        <div>
+          <p style={{ margin: 0, fontSize: "14px", color: "#6b7280" }}>
+            Household ativo
+          </p>
+          <h2 style={{ margin: "4px 0 0 0", fontSize: "20px", color: "#111827" }}>
+            {householdName ?? "Household"}
+          </h2>
+        </div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "16px",
-        }}
-      >
+      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
         <button
           onClick={handleLogout}
           style={{
@@ -67,15 +85,6 @@ export default function Topbar() {
           }}
         >
           J
-        </div>
-
-        <div>
-          <p style={{ margin: 0, fontWeight: 600, color: "#111827" }}>
-            Jay Junior
-          </p>
-          <p style={{ margin: 0, fontSize: "13px", color: "#6b7280" }}>
-            Usuário logado
-          </p>
         </div>
       </div>
     </header>

@@ -66,6 +66,42 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgument(
+            IllegalArgumentException ex,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                OffsetDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI(),
+                List.of(ex.getClass().getSimpleName())
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiErrorResponse> handleIllegalState(
+            IllegalStateException ex,
+            HttpServletRequest request
+    ) {
+        ex.printStackTrace();
+
+        ApiErrorResponse response = new ApiErrorResponse(
+                OffsetDateTime.now(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI(),
+                List.of(ex.getClass().getSimpleName())
+        );
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(
             MethodArgumentNotValidException ex,
@@ -116,11 +152,13 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request
     ) {
+        ex.printStackTrace();
+
         ApiErrorResponse response = new ApiErrorResponse(
                 OffsetDateTime.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                "Unexpected internal error",
+                ex.getMessage() != null ? ex.getMessage() : "Unexpected internal error",
                 request.getRequestURI(),
                 List.of(ex.getClass().getSimpleName())
         );

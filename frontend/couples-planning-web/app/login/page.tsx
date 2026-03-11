@@ -22,15 +22,18 @@ export default function LoginPage() {
 
     try {
 
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("householdId");
+      
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email,
-          password
-        })
+          password,
+        }),
       });
 
       if (!response.ok) {
@@ -41,8 +44,24 @@ export default function LoginPage() {
 
       localStorage.setItem("accessToken", data.accessToken);
 
-      // por enquanto vamos fixar household 1
-      localStorage.setItem("householdId", "1");
+      const householdsResponse = await fetch(`${API_BASE_URL}/households`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.accessToken}`,
+        },
+      });
+
+      if (!householdsResponse.ok) {
+        throw new Error("Erro ao carregar households");
+      }
+
+      const households = await householdsResponse.json();
+
+      if (!households.length) {
+        throw new Error("Usuário não possui household");
+      }
+
+      localStorage.setItem("householdId", households[0].id.toString());
 
       router.push("/dashboard");
 

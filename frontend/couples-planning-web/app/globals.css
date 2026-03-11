@@ -24,3 +24,140 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background: #f3f4f6;
+}
+
+.desktop-sidebar {
+  width: 248px;
+  min-width: 248px;
+  height: 100vh;
+  display: block;
+}
+
+.mobile-sidebar {
+  display: none;
+}
+
+.app-content {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .desktop-sidebar {
+    display: none;
+  }
+
+  .mobile-sidebar {
+    display: block;
+  }
+
+  .app-content {
+    width: 100%;
+  }
+}
+
+.mobile-menu-button {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.mobile-menu-button {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.dashboard-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+  align-items: stretch;
+}
+
+.dashboard-secondary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.dashboard-panel,
+.dashboard-chart-panel {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-panel-title {
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  color: #111827;
+}
+
+.dashboard-empty-state {
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  color: #6b7280;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-cards-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-cards-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.page-container {
+  padding: 24px;
+  max-width: 1240px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 20px 16px;
+  }
+}

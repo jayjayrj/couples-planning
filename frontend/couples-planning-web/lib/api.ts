@@ -1,4 +1,5 @@
-export const API_BASE_URL = "http://192.168.0.109:8080";
+export const API_BASE_URL =
+         process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://192.168.0.109:8080";
 
 export async function apiFetch(path: string, options?: RequestInit) {
   const token = localStorage.getItem("accessToken");
@@ -6,8 +7,8 @@ export async function apiFetch(path: string, options?: RequestInit) {
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(householdId ? { "X-Household-Id": householdId } : {}),
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...(householdId && { "X-Household-Id": householdId }),
     ...(options?.headers || {}),
   };
 
@@ -15,6 +16,14 @@ export async function apiFetch(path: string, options?: RequestInit) {
     ...options,
     headers,
   });
+
+  // se token expirou → volta para login
+  if (response.status === 401) {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("householdId");
+    window.location.href = "/login";
+    return;
+  }
 
   if (!response.ok) {
     throw new Error(`Erro na API: ${response.status}`);
@@ -29,4 +38,19 @@ export async function apiFetch(path: string, options?: RequestInit) {
 
 export async function getAccounts() {
   return apiFetch("/accounts");
+}
+
+export async function getHouseholds() {
+  return apiFetch("/households");
+}
+
+export async function getActiveHousehold() {
+  const householdId = localStorage.getItem("householdId");
+  if (!householdId) return null;
+
+  const households = await getHouseholds();
+  return households.find(
+    (household: { id: number; name: string }) =>
+      household.id === Number(householdId)
+  ) ?? null;
 }
