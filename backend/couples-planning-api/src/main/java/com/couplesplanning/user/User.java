@@ -27,6 +27,10 @@ public class User {
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
+    // NOVO CAMPO
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 

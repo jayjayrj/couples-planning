@@ -15,6 +15,9 @@ public record RegisterRequest(
         String password,
 
         @NotBlank
-        String fullName
+        String fullName,
+
+        @NotBlank
+        String householdName
 
 ) {}

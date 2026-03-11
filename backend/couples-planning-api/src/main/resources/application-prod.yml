@@ -14,3 +14,6 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     expiration: ${JWT_EXPIRATION:86400000}
+  upload:
+    avatar-dir: uploads/avatars
+    avatar-base-url: /uploads/avatars

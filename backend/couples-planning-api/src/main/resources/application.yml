@@ -15,3 +15,8 @@ management:
   endpoint:
     health:
       show-details: always
+
+app:
+  upload:
+    avatar-dir: uploads/avatars
+    avatar-base-url: /uploads/avatars

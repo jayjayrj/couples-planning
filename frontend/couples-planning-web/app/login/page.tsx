@@ -162,6 +162,27 @@ export default function LoginPage() {
           {loading ? "Entrando..." : "Entrar"}
         </button>
 
+        <p style={{ marginTop: "16px", textAlign: "center", color:"#6b7280" }}>
+          Ainda não tem conta?
+        </p>
+
+        <button
+          type="button"
+          onClick={() => router.push("/register")}
+          style={{
+            marginTop:"8px",
+            width:"100%",
+            padding:"10px",
+            background:"#ffffff",
+            border:"1px solid #e5e7eb",
+            borderRadius:"8px",
+            cursor:"pointer",
+            fontWeight:600
+          }}
+        >
+          Criar conta
+        </button>
+
       </form>
 
     </div>

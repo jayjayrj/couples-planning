@@ -33,7 +33,9 @@ public class SecurityConfig {
                                 "/actuator/info",
                                 "/auth/register",
                                 "/auth/login",
-                                "/test-error"
+                                "/test-error",
+                                "/auth/**",
+                                "/uploads/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

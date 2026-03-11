@@ -4,11 +4,18 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
-import { getActiveHousehold } from "@/lib/api";
+import { getActiveHousehold, apiFetch } from "@/lib/api";
 
 type Household = {
   id: number;
   name: string;
+};
+
+type AuthUser = {
+  id: number;
+  email: string;
+  fullName: string;
+  avatarUrl?: string | null;
 };
 
 export default function AuthLayout({
@@ -18,6 +25,7 @@ export default function AuthLayout({
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [household, setHousehold] = useState<Household | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -25,16 +33,21 @@ export default function AuthLayout({
   }, [pathname]);
 
   useEffect(() => {
-    async function loadActiveHousehold() {
+    async function loadLayoutData() {
       try {
-        const data = await getActiveHousehold();
-        setHousehold(data);
+        const [householdData, userData] = await Promise.all([
+          getActiveHousehold(),
+          apiFetch("/auth/me"),
+        ]);
+
+        setHousehold(householdData);
+        setUser(userData);
       } catch (error) {
-        console.error("Erro ao carregar household ativo", error);
+        console.error("Erro ao carregar dados do layout", error);
       }
     }
 
-    loadActiveHousehold();
+    loadLayoutData();
   }, []);
 
   return (
@@ -55,6 +68,8 @@ export default function AuthLayout({
         <Topbar
           onMenuClick={() => setMobileMenuOpen((prev) => !prev)}
           householdName={household?.name}
+          userName={user?.fullName}
+          avatarUrl={user?.avatarUrl}
         />
         {children}
       </div>

@@ -1,35 +1,58 @@
 # Couples Planning — Next Steps Roadmap
 
-Este documento define os próximos passos de desenvolvimento do Couples Planning.
-
-O objetivo é evoluir o sistema de forma incremental, entregando valor contínuo enquanto a base técnica cresce de maneira organizada.
+Este documento consolida o estado atual do projeto e os próximos passos imediatos.
 
 ---
 
 # Current Status
 
-Funcionalidades já implementadas:
+## AUTH
 
-AUTH
+Implementado:
 
 * registro
 * login
 * JWT
-* auth/me
+* `GET /auth/me`
+* login carregando households do usuário após autenticação
+* household ativo salvo no `localStorage`
 
-HOUSEHOLD
+## HOUSEHOLD
 
-* criação
-* seleção de household ativo
+Implementado:
 
-ACCOUNTS
+* criação de household
+* listagem de households do usuário
+* carregamento do household ativo no frontend de forma dinâmica
+* nome do household exibido no Topbar a partir da API
+
+## USER PROFILE / AVATAR
+
+Implementado ou em andamento avançado:
+
+* Topbar preparado para exibir avatar do usuário
+* fallback para inicial do nome quando não houver foto
+* backend preparado para evoluir `avatarUrl` no usuário
+* fluxo de cadastro no frontend com campo de foto opcional
+
+Pendente para fechamento completo:
+
+* persistir upload de avatar ponta a ponta
+* garantir exposição pública do arquivo salvo
+* validar retorno de `avatarUrl` no `/auth/me`
+
+## ACCOUNTS
+
+Implementado:
 
 * CRUD completo no backend
 * listagem no frontend
 * criação no frontend
 * exclusão no frontend
 
-EXPENSES
+## EXPENSES
+
+Implementado:
 
 * listar despesas
 * criar despesa
@@ -37,15 +60,23 @@ EXPENSES
 * marcar como paga
 * excluir despesa
 * filtros: Todas / Pendentes / Pagas
+* suporte a `accountId` no backend
+* suporte a `accountName` na listagem/frontend
 
-INCOMES
+## INCOMES
+
+Implementado:
 
 * listar receitas
 * criar receita
 * excluir receita
 * filtros: Todas / Recorrentes / Únicas
+* suporte a `accountId` no backend
+* suporte a `accountName` na listagem/frontend
 
-DASHBOARD
+## DASHBOARD
+
+Implementado:
 
 * saldo atual
 * receitas do mês
@@ -53,35 +84,43 @@ DASHBOARD
 * saldo do mês
 * gráfico financeiro
 
-PROJECTION
+## PROJECTION
+
+Implementado:
 
 * endpoint `/projection?months=N`
 * projeção financeira mês a mês
 * gráfico de saldo futuro
 * página dedicada de projeção
 * seletor de horizonte (3 / 6 / 12 meses)
-* expense forecast com despesas recorrentes consideradas
+* despesas recorrentes consideradas na projeção
 
-FRONTEND
+## FRONTEND / UX
+
+Implementado:
 
 * login
+* página de cadastro
 * dashboard
 * sidebar
 * topbar
 * páginas:
+
   * despesas
   * receitas
   * contas
   * projeção
 * modais para criação
 * ações com ícones
-* tooltips
+* correção do household hardcoded no topo
+* correção do `householdId` hardcoded no login
+* correção de contraste no mobile nas páginas internas
 
 ---
 
 # Important Domain Discovery
 
-Durante a evolução do projeto foi identificado um ponto estrutural importante:
+Durante a evolução do projeto foi identificado um ponto estrutural importante.
 
 ## Situação anterior
 
@@ -100,7 +139,7 @@ Consequências:
 * marcar despesa como paga não debitava conta
 * saldo das contas ficava desacoplado dos lançamentos
 
-Isso fazia o produto funcionar mais como um **planner financeiro** do que como um **sistema financeiro consistente por conta**.
+Isso fazia o produto funcionar mais como um planner financeiro do que como um sistema financeiro consistente por conta.
 
 ---
 
@@ -110,11 +149,9 @@ Prioridade: ALTA
 
 Objetivo: tornar o sistema financeiramente consistente e preparar a base para extrato, auditoria e evolução SaaS.
 
----
+## Account-linked Incomes and Expenses
 
-## Account-linked Incomes and Expenses (Backend)
-
-Status: ✅ IMPLEMENTADO NO BACKEND
+Status: ✅ IMPLEMENTADO
 
 Entregue:
 
@@ -123,7 +160,7 @@ Entregue:
 * `Expense` com `paidAt`
 * `Income` com `realizedAt`
 * requests atualizados para receber `accountId`
-* responses atualizados para retornar `accountId`
+* responses com dados de conta para exibição no frontend
 
 Regras atuais:
 
@@ -131,29 +168,25 @@ Regras atuais:
 * criar despesa continua como `PENDING`
 * marcar despesa como paga debita a conta vinculada
 
----
-
 ## Financial Ledger / Account Transactions
 
 Status: ✅ IMPLEMENTADO NO BACKEND
 
 Entregue:
 
-* nova entidade `AccountTransaction`
-* registro de movimentações financeiras por conta
-* tipos de transação para crédito/débito
-* vínculo por `referenceType` e `referenceId`
-* migration inicial criada e aplicada
+* entidade `AccountTransaction`
+* ledger por conta
+* crédito/débito por tipo de transação
+* `referenceType` e `referenceId`
+* migration aplicada
 * validação contra duplicidade por referência
-* controle transacional centralizado em `AccountLedgerService`
+* centralização no `AccountLedgerService`
 
-Objetivo atingido:
+Resultado:
 
-* saldo da conta passa a refletir movimentações reais
+* saldo passa a refletir movimentações reais
 * base pronta para extrato financeiro
 * base pronta para auditoria e reversão
-
----
 
 ## Delete Reversal Logic
 
@@ -163,111 +196,63 @@ Entregue:
 
 * exclusão de receita com estorno financeiro
 * exclusão de despesa paga com estorno financeiro
-* preservação da consistência entre ledger e saldo da conta
+* preservação da consistência entre ledger e saldo
 
-Resultado:
-
-* deletar receita não deixa saldo incorreto
-* deletar despesa paga não deixa saldo incorreto
-
----
-
-## Concurrency Protection on Account Balance
+## Concurrency Protection
 
 Status: ✅ IMPLEMENTADO NO BACKEND
 
 Entregue:
 
-* lock pessimista no carregamento da conta para movimentação
+* `PESSIMISTIC_WRITE` nas movimentações da conta
 * proteção contra race condition / lost update
-* índice único para evitar duplicidade de transação por referência
+* índice único para evitar duplicidade por referência
+
+---
+
+# Current Priority
+
+## 1. Fechar cadastro com avatar ponta a ponta
+
+Status: ⏳ EM ANDAMENTO
 
 Objetivo:
 
-* evitar inconsistência de saldo em operações concorrentes
+* permitir novo usuário criar conta
+* subir foto opcional
+* exibir foto real no Topbar
 
----
+Checklist:
 
-# Phase 1 — Completar Integração Conta + Lançamentos
+* confirmar migration de `avatar_url`
+* concluir endpoint `POST /users/me/avatar`
+* expor `/uploads/**`
+* retornar `avatarUrl` em `GET /auth/me`
+* enviar avatar após cadastro no frontend
+* validar exibição da foto no Topbar
 
-Prioridade: ALTA
-
-Objetivo: concluir a integração do novo domínio financeiro no frontend.
-
----
-
-## Expense Form with Account Selection
-
-Status: ⏳ EM ANDAMENTO
-
-Backend: ✅ pronto  
-Frontend form: ✅ componentes ajustados  
-Página de despesas: ⏳ precisa concluir integração final
-
-Escopo:
-
-* carregar contas via `/accounts`
-* exibir select de conta no modal de despesa
-* enviar `accountId` no payload
-* bloquear criação quando não houver contas cadastradas
-
-Arquivos envolvidos:
-
-* `components/NewExpenseForm.tsx`
-* `app/despesas/page.tsx`
-
----
-
-## Income Form with Account Selection
-
-Status: ⏳ EM ANDAMENTO
-
-Backend: ✅ pronto  
-Frontend form: ✅ componentes ajustados  
-Página de receitas: ⏳ precisa concluir integração final
-
-Escopo:
-
-* carregar contas via `/accounts`
-* exibir select de conta no modal de receita
-* enviar `accountId` no payload
-* bloquear criação quando não houver contas cadastradas
-
-Arquivos envolvidos:
-
-* `components/NewIncomeForm.tsx`
-* `app/receitas/page.tsx`
-
----
-
-## Show Account on Expense and Income Tables
+## 2. Revisar household inicial pós-cadastro
 
 Status: ⏳ PRÓXIMO
 
 Objetivo:
 
-mostrar na listagem qual conta foi utilizada em cada receita/despesa.
+* garantir que usuário recém-criado tenha household utilizável logo após registro
 
-Sugestão:
+Opções:
 
-* backend retornar `accountName` em `ExpenseResponse`
-* backend retornar `accountName` em `IncomeResponse`
-* frontend adicionar coluna "Conta" nas tabelas
+* criar household padrão automaticamente no backend
+* ou criar fluxo explícito de criação/seleção após cadastro
 
-Exemplo:
+Recomendação:
 
-* Supermercado — Conta Corrente
-* Salário — Nubank
+* criar household padrão automático para reduzir atrito de onboarding
 
 ---
 
-# Phase 2 — Financial Visibility
+# Phase 1 — Financial Visibility
 
 Prioridade: ALTA
-
-Objetivo: transformar a nova base de ledger em valor visível para o usuário.
-
----
 
 ## Account Statement / Transaction History
 
@@ -277,3 +262,76 @@ Nova feature sugerida:
 
 ```http
 GET /accounts/{id}/transactions
+```
+
+Objetivo:
+
+* mostrar extrato por conta
+* listar créditos, débitos e reversões
+* dar visibilidade ao ledger já existente
+
+Escopo inicial:
+
+* endpoint paginado
+* tabela no frontend
+* filtros por período
+* descrição, tipo, direção, valor e data
+
+## Dashboard Improvements
+
+Status: ⏳ PRÓXIMO CANDIDATO
+
+Sugestões:
+
+* resumo por conta
+* últimos lançamentos
+* atalhos para criar receita/despesa
+* alertas de contas sem saldo
+
+---
+
+# Phase 2 — UX / Product Evolution
+
+Prioridade: MÉDIA
+
+## Melhorias de onboarding
+
+* validação melhor de erros no cadastro
+* preview da foto antes do envio
+* mensagem clara quando usuário não possuir household
+* seleção de household quando houver múltiplos
+
+## Melhorias de responsividade
+
+* revisar tabelas no mobile
+* revisar toolbar das páginas internas
+* melhorar experiência de upload de foto no mobile
+
+## Households multiusuário
+
+* convite de parceiro
+* associação de múltiplos usuários ao mesmo household
+* gestão de membros
+
+---
+
+# Longer Term
+
+Possíveis evoluções futuras:
+
+* categorias de despesas e receitas
+* metas financeiras
+* relatórios
+* exportação CSV
+* convites para household
+* multi usuários completos
+* planos de assinatura
+* integrações bancárias
+
+---
+
+# Immediate Next Action
+
+Próxima ação recomendada:
+
+**finalizar o fluxo de avatar ponta a ponta e validar o Topbar com foto real do usuário.**

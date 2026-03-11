@@ -1,13 +1,22 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/api";
 
 type Props = {
   onMenuClick?: () => void;
   householdName?: string;
+  userName?: string;
+  avatarUrl?: string | null;
 };
 
-export default function Topbar({ onMenuClick, householdName }: Props) {
+export default function Topbar({
+  onMenuClick,
+  householdName,
+  userName,
+  avatarUrl,
+}: Props) {
+    console.log("avatarUrl:", avatarUrl);
   const router = useRouter();
 
   function handleLogout() {
@@ -15,6 +24,8 @@ export default function Topbar({ onMenuClick, householdName }: Props) {
     localStorage.removeItem("householdId");
     router.push("/login");
   }
+
+  const initial = userName ? userName.charAt(0).toUpperCase() : "U";
 
   return (
     <header
@@ -71,21 +82,37 @@ export default function Topbar({ onMenuClick, householdName }: Props) {
           Sair
         </button>
 
-        <div
-          style={{
-            width: "40px",
-            height: "40px",
-            borderRadius: "999px",
-            background: "#ede9fe",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#5b21b6",
-            fontWeight: "bold",
-          }}
-        >
-          J
-        </div>
+        {avatarUrl ? (
+          <img
+            src={`${API_BASE_URL}${avatarUrl}`}
+            alt={userName ?? "Usuário"}
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "999px",
+              objectFit: "cover",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "999px",
+              background: "#ede9fe",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#5b21b6",
+              fontWeight: "bold",
+            }}
+          >
+            {initial}
+          </div>
+        )}
       </div>
     </header>
   );
