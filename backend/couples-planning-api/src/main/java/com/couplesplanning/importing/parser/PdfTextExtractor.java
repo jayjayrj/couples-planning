@@ -1,53 +1,37 @@
 package com.couplesplanning.importing.parser;
 
-import com.couplesplanning.shared.exception.PdfTextExtractionException;
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.io.InputStream;
 
-@Component
+@Service
 public class PdfTextExtractor {
 
+    private final PdfOcrExtractor pdfOcrExtractor;
+
+    public PdfTextExtractor(PdfOcrExtractor pdfOcrExtractor) {
+        this.pdfOcrExtractor = pdfOcrExtractor;
+    }
+
     public String extractText(MultipartFile file) {
-        validatePdf(file);
-
-        try (InputStream inputStream = file.getInputStream();
-             PDDocument document = Loader.loadPDF(inputStream.readAllBytes())) {
-
-            if (document.isEncrypted()) {
-                throw new PdfTextExtractionException("O PDF está protegido por senha ou criptografia.");
-            }
-
+        try (PDDocument document = PDDocument.load(file.getInputStream())) {
             PDFTextStripper stripper = new PDFTextStripper();
             String text = stripper.getText(document);
 
-            if (text == null || text.isBlank()) {
-                throw new PdfTextExtractionException(
-                        "Não foi possível extrair texto do PDF. Ele pode estar escaneado como imagem."
-                );
+            if (shouldUseOcr(text)) {
+                return pdfOcrExtractor.extractText(document);
             }
 
             return text;
-        } catch (PdfTextExtractionException e) {
-            throw e;
         } catch (IOException e) {
-            throw new PdfTextExtractionException("Falha ao abrir ou processar o PDF.");
+            throw new RuntimeException("Erro ao ler PDF", e);
         }
     }
 
-    private void validatePdf(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new PdfTextExtractionException("Arquivo PDF não informado.");
-        }
-
-        String fileName = file.getOriginalFilename();
-        if (fileName == null || !fileName.toLowerCase().endsWith(".pdf")) {
-            throw new PdfTextExtractionException("O arquivo enviado precisa ter extensão .pdf.");
-        }
+    private boolean shouldUseOcr(String text) {
+        return text == null || text.trim().length() < 100;
     }
 }

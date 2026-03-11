@@ -1,6 +1,7 @@
 package com.couplesplanning.importing.controller;
 
 import com.couplesplanning.importing.dto.ConfirmImportRequestDto;
+import com.couplesplanning.importing.dto.ConfirmImportResponseDto;
 import com.couplesplanning.importing.dto.ImportPreviewResponseDto;
 import com.couplesplanning.importing.service.ImportOrchestratorService;
 import jakarta.validation.Valid;
@@ -34,10 +35,10 @@ public class ImportController {
     }
 
     @PostMapping("/pdf/confirm")
-    public ResponseEntity<Map<String, String>> confirmImport(
+    public ResponseEntity<ConfirmImportResponseDto> confirmImport(
             @Valid @RequestBody ConfirmImportRequestDto request
     ) {
-        String message = importOrchestratorService.confirm(request);
-        return ResponseEntity.ok(Map.of("message", message));
+        ConfirmImportResponseDto response = importOrchestratorService.confirm(request);
+        return ResponseEntity.ok(response);
     }
 }

@@ -5,8 +5,10 @@ export async function apiFetch(path: string, options?: RequestInit) {
   const token = localStorage.getItem("accessToken");
   const householdId = localStorage.getItem("householdId");
 
+  const isFormData = options?.body instanceof FormData;
+
   const headers: HeadersInit = {
-    "Content-Type": "application/json",
+    ...(!isFormData && { "Content-Type": "application/json" }),
     ...(token && { Authorization: `Bearer ${token}` }),
     ...(householdId && { "X-Household-Id": householdId }),
     ...(options?.headers || {}),
@@ -17,7 +19,6 @@ export async function apiFetch(path: string, options?: RequestInit) {
     headers,
   });
 
-  // se token expirou → volta para login
   if (response.status === 401) {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("householdId");
@@ -26,7 +27,8 @@ export async function apiFetch(path: string, options?: RequestInit) {
   }
 
   if (!response.ok) {
-    throw new Error(`Erro na API: ${response.status}`);
+    const errorText = await response.text();
+    throw new Error(`Erro na API: ${response.status}${errorText ? ` - ${errorText}` : ""}`);
   }
 
   if (response.status === 204) {

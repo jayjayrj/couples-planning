@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Wallet, TrendingUp, Receipt, Target, LineChart, Heart } from "lucide-react";
+import { LayoutDashboard, Wallet, TrendingUp, Receipt, Target, LineChart, Heart, FileUp } from "lucide-react";
 import { useEffect } from "react";
 
 const menuItems = [
@@ -12,6 +12,7 @@ const menuItems = [
   { label: "Despesas", href: "/despesas", icon: Receipt },
   { label: "Metas", href: "/metas", icon: Target },
   { label: "Projeção", href: "/projecao", icon: LineChart },
+  { label: "Importação", href: "/importacao", icon: FileUp },
 ];
 
 type Props = {
