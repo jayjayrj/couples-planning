@@ -1,482 +1,173 @@
-Couples Planning — Project Context
-Overview
+# Project Context
 
-Couples Planning é uma aplicação web para planejamento financeiro doméstico (household financial planning).
+## Visão Geral
 
-O sistema permite que dois parceiros organizem:
+O Couples Planning é um sistema de planejamento financeiro voltado para casais ou famílias (households).
 
-contas financeiras
+O objetivo do sistema é permitir que membros de um mesmo household acompanhem receitas, despesas, metas financeiras e projeções futuras de forma colaborativa.
 
-receitas
+Cada usuário pertence a um ou mais households e os dados financeiros são sempre isolados por household.
 
-despesas
+---
 
-projeção financeira futura
+## Principais Conceitos
 
-saldo consolidado do household
+### Household
 
-O objetivo é fornecer visibilidade clara sobre a situação financeira atual e futura do casal.
+O household representa uma unidade familiar ou grupo financeiro compartilhado.
 
-Architecture
-Backend
+Todos os dados financeiros são associados a um household:
 
-Stack:
+- contas
+- receitas
+- despesas
+- metas
+- projeções
 
-Java
+---
 
-Spring Boot
+### Contas (Accounts)
 
-Spring Security
+As contas representam locais onde o dinheiro está armazenado ou movimentado.
 
-JWT Authentication
+Tipos de contas suportados:
 
-Spring Data JPA
+- CHECKING (conta corrente)
+- SAVINGS (poupança)
+- CREDIT_CARD (cartão de crédito)
+- CASH (dinheiro)
 
-Flyway
+Cada conta possui:
 
-PostgreSQL
+- nome
+- tipo
+- saldo atual
 
-Arquitetura:
+---
 
-Controller
-Service
-Repository
-Entity
-DTO / Request / Response
+### Receitas (Income)
 
-O backend é multi-tenant por household.
+Representam entradas de dinheiro.
 
-Cada registro pertence a um household_id.
+Podem ser:
 
-Frontend
-
-Stack:
-
-Next.js (App Router)
-
-React
-
-TypeScript
-
-CSS simples (inline styles)
-
-Estrutura principal:
-
-app/
-  dashboard/
-  despesas/
-  receitas/
-  contas/
-  projecao/
-
-components/
-  Sidebar
-  Topbar
-  Modal
-  Forms
-  Charts
-
-lib/
-  api.ts
-  currency.ts
-Core Domain
-Household
-
-Representa a unidade financeira do casal.
-
-Um usuário pode pertencer a um ou mais households (feature futura).
-
-Cada entidade financeira pertence a um household.
-
-User
-
-Usuário autenticado.
-
-Autenticação via:
-
-JWT
-
-Endpoints principais:
-
-POST /auth/register
-POST /auth/login
-GET  /auth/me
-Financial Domain
-
-O sistema utiliza um modelo baseado em contas financeiras + ledger de transações.
-
-Isso garante consistência financeira e rastreabilidade.
-
-Account
-
-Representa uma conta financeira.
-
-Exemplos:
-
-Conta Corrente
-
-Conta Poupança
-
-Dinheiro
-
-Cartão de crédito (futuro)
+- únicas
+- recorrentes (mensais)
 
 Campos principais:
 
-id
-household_id
-name
-type
-current_balance
-created_at
+- descrição
+- valor
+- conta associada
+- tipo de recorrência
+- data inicial
+- data final (opcional)
 
-Tipos possíveis:
+---
 
-CHECKING
-SAVINGS
-CREDIT_CARD
-CASH
-Income
+### Despesas (Expense)
 
-Representa uma receita.
+Representam saídas de dinheiro.
 
-Exemplo:
+Podem ser:
 
-salário
-
-freelance
-
-aluguel recebido
+- despesas únicas
+- despesas recorrentes
+- despesas parceladas
 
 Campos principais:
 
-id
-household_id
-account_id
-description
-amount
-recurrence_type
-start_date
-end_date
-day_of_month
-realized_at
-created_at
+- descrição
+- valor
+- conta
+- recorrência
+- data
 
-Recorrência:
+---
 
-ONCE
-MONTHLY
+### Ledger
 
-Regras:
+O sistema utiliza um ledger interno para registrar movimentações financeiras.
 
-criar income gera crédito na conta
+Toda criação de receita ou despesa gera um lançamento correspondente no ledger.
 
-cria também AccountTransaction
+Isso permite manter consistência no saldo das contas.
 
-Expense
+---
 
-Representa uma despesa planejada ou paga.
+## Importação de Dados Financeiros
 
-Campos principais:
+O sistema possui suporte à importação de transações financeiras a partir de documentos PDF, como faturas de cartão de crédito ou extratos bancários.
 
-id
-household_id
-account_id
-description
-amount
-recurrence_type
-start_date
-end_date
-day_of_month
-status
-paid_at
-created_at
+### Pipeline de Importação
 
-Status possíveis:
+1. Usuário envia um PDF pela interface web
+2. Backend tenta extrair texto usando Apache PDFBox
+3. Se o PDF não possuir texto (documento escaneado), é utilizado OCR
+4. O OCR utiliza Tesseract via Tess4J
+5. O texto extraído é dividido em linhas
+6. Um parser determinístico identifica possíveis transações
+7. O backend gera um preview das transações
+8. O usuário seleciona quais transações deseja importar
+9. O backend cria despesas ou receitas correspondentes
 
-PENDING
-PAID
+---
 
-Regras:
+### Preview de Importação
 
-Criar despesa:
+Endpoint:
 
-status = PENDING
-não altera saldo
 
-Marcar como paga:
+POST /api/imports/pdf/preview
 
-status = PAID
-paid_at = now
-debita conta
-gera AccountTransaction
-Financial Ledger
-AccountTransaction
-
-Representa uma movimentação financeira real.
-
-Essa entidade garante:
-
-histórico financeiro
-
-rastreabilidade
-
-auditoria
-
-consistência de saldo
-
-Campos principais:
-
-id
-household_id
-account_id
-type
-direction
-amount
-transaction_date
-reference_type
-reference_id
-description
-created_at
-Transaction Type
-
-Define a origem da movimentação.
-
-INCOME
-EXPENSE
-TRANSFER_IN
-TRANSFER_OUT
-ADJUSTMENT
-REVERSAL
-Transaction Direction
-
-Define impacto no saldo.
-
-CREDIT
-DEBIT
-Reference Type
-
-Define qual entidade originou a transação.
-
-INCOME
-EXPENSE
-MANUAL
-SYSTEM
-Account Ledger Service
-
-Serviço central responsável por movimentações financeiras.
-
-AccountLedgerService
-
-Funções principais:
-
-credit()
-debit()
-reverse()
 
 Responsabilidades:
 
-atualizar saldo da conta
+- extrair texto do PDF
+- detectar tipo de documento
+- parsear transações
+- detectar possíveis duplicidades
+- retornar preview para o frontend
 
-registrar transação no ledger
+---
 
-validar duplicidade
-
-validar ownership do household
-
-Reversal Logic
-
-Ao excluir lançamentos financeiros, o sistema gera transações de estorno.
-
-Exemplo:
-
-Income criado:
-
-CREDIT 5000
-
-Income deletado:
-
-REVERSAL DEBIT 5000
-
-Isso mantém histórico contábil.
-
-Concurrency Protection
-
-Movimentações financeiras usam:
-
-PESSIMISTIC_WRITE
-
-na leitura da conta.
-
-Objetivo:
-
-evitar lost updates no saldo.
-
-Exemplo de problema evitado:
-
-Thread A lê saldo 1000
-Thread B lê saldo 1000
-
-A debita 100
-B debita 50
-
-Saldo correto:
-
-850
-
-Lock pessimista garante consistência.
-
-Database Migrations
-
-Gerenciadas via:
-
-Flyway
-
-Convenção:
-
-V1__init.sql
-V2__household.sql
-V3__accounts.sql
-...
-V8__account_ledger.sql
-
-Migration do ledger inclui:
-
-account_transactions
-account_id em expenses
-account_id em incomes
-paid_at
-realized_at
-Dashboard
+### Confirmação de Importação
 
 Endpoint:
 
-GET /dashboard/summary
 
-Retorna:
+POST /api/imports/pdf/confirm
 
-currentBalance
-totalMonthlyIncome
-totalMonthlyExpense
-projectedMonthEndBalance
-Projection
 
-Endpoint:
+Responsabilidades:
 
-GET /projection?months=N
+- receber itens selecionados
+- criar despesas ou receitas
+- marcar despesas como pagas
+- atualizar o ledger
 
-Calcula projeção financeira futura considerando:
+---
 
-receitas recorrentes
+### Tecnologias utilizadas
 
-despesas recorrentes
+- Apache PDFBox
+- Tesseract OCR (Tess4J)
+- Parser determinístico baseado em regex
+- Detecção de duplicidade baseada em histórico de transações
 
-saldo atual
+---
 
-Retorna:
+### Fluxo da Interface
 
-monthly projections
-forecast expenses
-Frontend Pages
-Dashboard
+1. Usuário seleciona conta destino
+2. Usuário envia o arquivo PDF
+3. Sistema gera preview das transações encontradas
+4. Usuário seleciona quais transações deseja importar
+5. Usuário confirma a importação
 
-Mostra:
+Recursos da interface:
 
-saldo atual
-
-receitas do mês
-
-despesas do mês
-
-saldo projetado
-
-gráfico de evolução
-
-Contas
-
-Permite:
-
-criar conta
-
-listar contas
-
-excluir conta
-
-Despesas
-
-Permite:
-
-criar despesa
-
-marcar como paga
-
-excluir despesa
-
-filtros
-
-Modal inclui:
-
-account selection
-Receitas
-
-Permite:
-
-criar receita
-
-excluir receita
-
-filtros
-
-Modal inclui:
-
-account selection
-Projeção
-
-Mostra:
-
-gráfico de saldo futuro
-
-previsão de despesas
-
-Horizontes:
-
-3 meses
-6 meses
-12 meses
-Current Development Focus
-
-Fase atual do projeto:
-
-concluir integração financeira entre backend e frontend.
-
-Próximos passos imediatos:
-
-finalizar seleção de conta no frontend
-
-mostrar conta em receitas/despesas
-
-criar extrato por conta
-
-melhorar UX
-
-Long Term Vision
-
-Evoluir Couples Planning para um SaaS financeiro para casais.
-
-Possíveis evoluções:
-
-categorias de despesas
-
-metas financeiras
-
-relatórios
-
-exportação CSV
-
-convites para household
-
-multi usuário
-
-assinaturas premium
-
-integrações bancárias (futuro distante)
+- seleção individual de itens
+- selecionar todos
+- limpar seleção
+- destaque para possíveis duplicidades

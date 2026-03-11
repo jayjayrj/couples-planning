@@ -1,469 +1,339 @@
-Couples Planning — Architecture Overview
-Purpose
+Perfeito — abaixo estão os três arquivos completos atualizados para você copiar e colar diretamente no projeto.
 
-Couples Planning é uma aplicação web para planejamento financeiro doméstico.
+PROJECT_CONTEXT.md
+# Project Context
 
-O objetivo do sistema é permitir que um casal:
+## Visão Geral
 
-organize contas financeiras
+O Couples Planning é um sistema de planejamento financeiro voltado para casais ou famílias (households).
 
-registre receitas
+O objetivo do sistema é permitir que membros de um mesmo household acompanhem receitas, despesas, metas financeiras e projeções futuras de forma colaborativa.
 
-registre despesas
+Cada usuário pertence a um ou mais households e os dados financeiros são sempre isolados por household.
 
-visualize saldo consolidado
+---
 
-projetar a situação financeira futura
+## Principais Conceitos
 
-O sistema foi projetado para evoluir para um SaaS financeiro para casais.
+### Household
 
-High-Level Architecture
+O household representa uma unidade familiar ou grupo financeiro compartilhado.
 
-O sistema segue uma arquitetura cliente-servidor.
+Todos os dados financeiros são associados a um household:
 
-Frontend (Next.js)
-        ↓
-Backend API (Spring Boot)
-        ↓
-Database (PostgreSQL)
-Backend Architecture
+- contas
+- receitas
+- despesas
+- metas
+- projeções
 
-Stack:
+---
 
-Java
-Spring Boot
-Spring Security
-JWT Authentication
-Spring Data JPA
-Flyway
-PostgreSQL
+### Contas (Accounts)
 
-Estrutura de camadas:
+As contas representam locais onde o dinheiro está armazenado ou movimentado.
 
-Controller
-   ↓
-Service
-   ↓
-Repository
-   ↓
-Database
+Tipos de contas suportados:
+
+- CHECKING (conta corrente)
+- SAVINGS (poupança)
+- CREDIT_CARD (cartão de crédito)
+- CASH (dinheiro)
+
+Cada conta possui:
+
+- nome
+- tipo
+- saldo atual
+
+---
+
+### Receitas (Income)
+
+Representam entradas de dinheiro.
+
+Podem ser:
+
+- únicas
+- recorrentes (mensais)
+
+Campos principais:
+
+- descrição
+- valor
+- conta associada
+- tipo de recorrência
+- data inicial
+- data final (opcional)
+
+---
+
+### Despesas (Expense)
+
+Representam saídas de dinheiro.
+
+Podem ser:
+
+- despesas únicas
+- despesas recorrentes
+- despesas parceladas
+
+Campos principais:
+
+- descrição
+- valor
+- conta
+- recorrência
+- data
+
+---
+
+### Ledger
+
+O sistema utiliza um ledger interno para registrar movimentações financeiras.
+
+Toda criação de receita ou despesa gera um lançamento correspondente no ledger.
+
+Isso permite manter consistência no saldo das contas.
+
+---
+
+## Importação de Dados Financeiros
+
+O sistema possui suporte à importação de transações financeiras a partir de documentos PDF, como faturas de cartão de crédito ou extratos bancários.
+
+### Pipeline de Importação
+
+1. Usuário envia um PDF pela interface web
+2. Backend tenta extrair texto usando Apache PDFBox
+3. Se o PDF não possuir texto (documento escaneado), é utilizado OCR
+4. O OCR utiliza Tesseract via Tess4J
+5. O texto extraído é dividido em linhas
+6. Um parser determinístico identifica possíveis transações
+7. O backend gera um preview das transações
+8. O usuário seleciona quais transações deseja importar
+9. O backend cria despesas ou receitas correspondentes
+
+---
+
+### Preview de Importação
+
+Endpoint:
+
+
+POST /api/imports/pdf/preview
+
 
 Responsabilidades:
 
-Layer	Responsibility
-Controller	expõe endpoints REST
-Service	regras de negócio
-Repository	acesso ao banco
-Entity	mapeamento JPA
-DTO	requests/responses da API
-Multi-Tenancy Model
+- extrair texto do PDF
+- detectar tipo de documento
+- parsear transações
+- detectar possíveis duplicidades
+- retornar preview para o frontend
 
-O sistema é multi-tenant por household.
+---
 
-Um household representa a unidade financeira de um casal.
+### Confirmação de Importação
 
-Todas as entidades financeiras possuem:
+Endpoint:
 
-household_id
 
-Isso garante isolamento entre casais.
+POST /api/imports/pdf/confirm
 
-Authentication
-
-Autenticação baseada em JWT.
-
-Fluxo:
-
-POST /auth/login
-        ↓
-JWT Token
-        ↓
-Token enviado em todas as requisições
-
-Endpoints principais:
-
-POST /auth/register
-POST /auth/login
-GET  /auth/me
-Core Domain Model
-
-O domínio financeiro do sistema é baseado em:
-
-Accounts
-+
-Financial Ledger
-
-Isso garante consistência financeira.
-
-Account
-
-Representa uma conta financeira.
-
-Exemplos:
-
-Conta corrente
-
-Poupança
-
-Dinheiro
-
-Cartão de crédito (futuro)
-
-Campos principais:
-
-id
-household_id
-name
-type
-current_balance
-created_at
-
-Tipos:
-
-CHECKING
-SAVINGS
-CREDIT_CARD
-CASH
-Income
-
-Representa uma receita.
-
-Exemplos:
-
-salário
-
-freelance
-
-aluguel recebido
-
-Campos principais:
-
-id
-household_id
-account_id
-description
-amount
-recurrence_type
-start_date
-end_date
-day_of_month
-realized_at
-created_at
-
-Regras:
-
-Criar income:
-
-credit account
-create ledger transaction
-Expense
-
-Representa uma despesa.
-
-Campos principais:
-
-id
-household_id
-account_id
-description
-amount
-recurrence_type
-start_date
-end_date
-day_of_month
-status
-paid_at
-created_at
-
-Status:
-
-PENDING
-PAID
-
-Regras:
-
-Criar despesa:
-
-status = PENDING
-não altera saldo
-
-Marcar como paga:
-
-status = PAID
-debita conta
-cria ledger transaction
-Financial Ledger
-
-Para garantir consistência financeira o sistema utiliza um ledger de transações.
-
-Entidade:
-
-AccountTransaction
-
-Campos principais:
-
-id
-household_id
-account_id
-type
-direction
-amount
-transaction_date
-reference_type
-reference_id
-description
-created_at
-Transaction Types
-INCOME
-EXPENSE
-TRANSFER_IN
-TRANSFER_OUT
-ADJUSTMENT
-REVERSAL
-Transaction Direction
-
-Define impacto no saldo.
-
-CREDIT
-DEBIT
-Reference Type
-
-Indica a origem da transação.
-
-INCOME
-EXPENSE
-MANUAL
-SYSTEM
-Ledger Service
-
-Toda movimentação financeira passa por:
-
-AccountLedgerService
-
-Funções principais:
-
-credit()
-debit()
-reverse()
 
 Responsabilidades:
 
-atualizar saldo da conta
+- receber itens selecionados
+- criar despesas ou receitas
+- marcar despesas como pagas
+- atualizar o ledger
 
-registrar transação
+---
 
-prevenir duplicidade
+### Tecnologias utilizadas
 
-validar household ownership
+- Apache PDFBox
+- Tesseract OCR (Tess4J)
+- Parser determinístico baseado em regex
+- Detecção de duplicidade baseada em histórico de transações
 
-Reversal Strategy
+---
 
-Ao excluir lançamentos financeiros o sistema cria transações de reversão.
+### Fluxo da Interface
 
-Exemplo:
+1. Usuário seleciona conta destino
+2. Usuário envia o arquivo PDF
+3. Sistema gera preview das transações encontradas
+4. Usuário seleciona quais transações deseja importar
+5. Usuário confirma a importação
 
-Income criado
+Recursos da interface:
 
-CREDIT 5000
-Income deletado
+- seleção individual de itens
+- selecionar todos
+- limpar seleção
+- destaque para possíveis duplicidades
+ARCHITECTURE.md
+# Architecture
 
-REVERSAL DEBIT 5000
+## Backend
 
-Isso preserva histórico contábil.
+O backend é desenvolvido em **Java com Spring Boot**.
 
-Concurrency Strategy
+Estrutura principal do pacote:
 
-Para evitar inconsistência de saldo, o sistema usa:
 
-PESSIMISTIC_WRITE
+com.couplesplanning
 
-ao carregar contas durante movimentações financeiras.
 
-Isso evita race conditions.
+Principais módulos:
 
-Database Management
+- account
+- auth
+- dashboard
+- expense
+- goal
+- household
+- importing
+- income
+- ledger
+- membership
+- projection
+- shared
+- user
 
-Migrações controladas por:
+---
 
-Flyway
+## Estrutura em Camadas
 
-Convenção:
+O backend segue uma arquitetura em camadas:
 
-V1__init.sql
-V2__auth.sql
-V3__household.sql
-V4__accounts.sql
-...
-V8__account_ledger.sql
-Frontend Architecture
+Controller  
+Service  
+Repository  
+Domain / Entity
 
-Stack:
+### Controllers
 
-Next.js (App Router)
-React
-TypeScript
+Responsáveis por expor endpoints REST.
 
-Estrutura principal:
+### Services
 
-app/
-  dashboard
-  despesas
-  receitas
-  contas
-  projecao
+Contêm a lógica de negócio da aplicação.
 
-components/
-  forms
-  layout
-  modal
-  charts
+### Repositories
 
-lib/
-  api.ts
-  currency.ts
-Frontend Responsibilities
+Responsáveis pelo acesso ao banco de dados.
 
-Frontend é responsável por:
+### Domain / Entities
 
-autenticação
+Representam os modelos persistidos no banco.
 
-navegação
+---
 
-formulários
+## Segurança
 
-visualização de dados
+A aplicação utiliza:
 
-gráficos
+- Spring Security
+- JWT (JSON Web Tokens)
 
-interação com API
+O frontend envia o token no header:
 
-Toda lógica de negócio permanece no backend.
 
-API Communication
+Authorization: Bearer <token>
 
-Comunicação via REST.
 
-Helper principal:
+Também é enviado o header:
 
-lib/api.ts
 
-Exemplo:
+X-Household-Id
 
-apiFetch("/expenses")
 
-Inclui automaticamente:
+para identificar o contexto do household ativo.
 
-Authorization: Bearer TOKEN
-Key Endpoints
+---
 
-Auth:
+## Importing Module
 
-POST /auth/register
-POST /auth/login
-GET  /auth/me
+Pacote:
 
-Accounts:
 
-GET /accounts
-POST /accounts
-DELETE /accounts/{id}
+com.couplesplanning.importing
 
-Expenses:
 
-GET /expenses
-POST /expenses
-PATCH /expenses/{id}/pay
-DELETE /expenses/{id}
+Responsabilidades:
 
-Incomes:
+- extração de texto de PDFs
+- OCR para documentos escaneados
+- parsing de transações
+- geração de preview de importação
+- confirmação e persistência das transações
 
-GET /incomes
-POST /incomes
-DELETE /incomes/{id}
+Componentes principais:
 
-Dashboard:
+### PdfTextExtractor
 
-GET /dashboard/summary
+Extrai texto diretamente do PDF usando PDFBox.
 
-Projection:
+---
 
-GET /projection?months=N
-Future Architecture Evolution
+### PdfOcrExtractor
 
-O sistema foi projetado para evoluir para:
+Utiliza Tesseract OCR quando o PDF não possui texto.
 
-Financial SaaS
+---
 
-Possíveis evoluções:
+### TransactionLineParser
 
-categorias de despesas
+Parser determinístico baseado em regex para identificar:
 
-extrato financeiro
+- data
+- descrição
+- valor
 
-relatórios
+---
 
-metas financeiras
+### ImportOrchestratorService
 
-exportação CSV
+Orquestra todo o processo de importação:
 
-convites para household
+- extração de texto
+- parsing
+- geração de preview
+- detecção de duplicidades
 
-multi usuários
+---
 
-planos de assinatura
+### DuplicateDetectionService
 
-integração bancária
+Identifica possíveis transações duplicadas comparando:
 
-Design Principles
+- descrição
+- valor
+- data
 
-O projeto segue estes princípios:
+com transações existentes.
 
-Simplicidade
+---
 
-Evitar complexidade desnecessária.
+## Frontend
 
-Domínio consistente
+O frontend é desenvolvido com **Next.js + React + TypeScript**.
 
-Saldo sempre derivado de transações financeiras.
+Principais características:
 
-Evolução incremental
+- autenticação baseada em JWT
+- consumo de APIs REST do backend
+- interface focada em usabilidade financeira
 
-Cada feature adiciona valor sem quebrar a base existente.
+Principais páginas:
 
-Backend como fonte de verdade
-
-Toda regra financeira fica no backend.
-
-Current Focus
-
-A fase atual do projeto está focada em:
-
-completar integração financeira
-
-Próximos passos principais:
-
-finalizar seleção de conta no frontend
-
-mostrar conta em receitas/despesas
-
-criar extrato por conta
-
-melhorar UX
-
-Summary
-
-Couples Planning utiliza um modelo baseado em:
-
-Accounts
-+
-Ledger Transactions
-
-Esse modelo garante:
-
-consistência financeira
-
-histórico completo
-
-auditabilidade
-
-escalabilidade para features futuras
+- Dashboard
+- Contas
+- Receitas
+- Despesas
+- Metas
+- Projeção
+- Importação de PDF
